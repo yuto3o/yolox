@@ -113,7 +113,10 @@ class YoloParser:
 
       elif cfg[nlayer]['section'].startswith('yolo'):
         prev_filter = int(cfg[nlayer-1]['filters'])
-
+		
+      elif cfg[nlayer]['section'].startswith('maxpool'):
+        prev_filter = int(cfg[nlayer-1]['filters'])
+		
       elif cfg[nlayer]['section'].startswith('net'):
           pass
       else:
