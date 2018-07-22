@@ -47,7 +47,7 @@ Model Parameters:
 Finish !
 ```
 
-You can check all the variable by Tensorflow API. Of course,  renaming all variable is possible by tf.train.Saver.
+You can check all variables by Tensorflow API. Of course,  renaming all variables is possible by tf.train.Saver.
 
 ```python
 import tensorflow as tf
