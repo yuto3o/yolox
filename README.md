@@ -28,8 +28,8 @@ parser.run()
 ```shell
 Reading .cfg file ...
 Converting ...
-From C:\Users\yuyang\Downloads\yolov3\yolov3.weights
-To   C:\Users\yuyang\Downloads\yolov3\yolov3.ckpt
+From ./yolov3/yolov3.weights
+To   ./yolov3/yolov3.ckpt
 Encode weights...
 Success!
 Model Parameters:
