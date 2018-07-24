@@ -107,4 +107,7 @@ venv.bak/
 *.tar.gz
 *.ckpt
 .vscode/
-yolov3/
+
+yolov3/yolov3*
+yolov3/checkpoint
+demo.py

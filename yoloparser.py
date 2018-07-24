@@ -53,7 +53,7 @@ class YoloParser:
         seen = np.ndarray(shape=(1,), dtype='int64', buffer=weights_file.read(8))
     else:
         seen = np.ndarray(shape=(1,), dtype='int32', buffer=weights_file.read(4))
-    #print('Weights Header: ', major, minor, revision, seen)
+    print('Weights Header: ', major, minor, revision, seen)
 
     prev_filter = self._input_dims
     n_conv = 0
@@ -113,10 +113,10 @@ class YoloParser:
 
       elif cfg[nlayer]['section'].startswith('yolo'):
         prev_filter = int(cfg[nlayer-1]['filters'])
-		
+
       elif cfg[nlayer]['section'].startswith('maxpool'):
         prev_filter = int(cfg[nlayer-1]['filters'])
-		
+
       elif cfg[nlayer]['section'].startswith('net'):
           pass
       else:
