@@ -204,8 +204,8 @@ def detect(inputs, anchors, n_classes, img_size, scope='detection'):
     box_centers = tf.nn.sigmoid(box_centers)
     confidence = tf.nn.sigmoid(confidence)
 
-    grid_x = tf.range(grid_size[0], dtype=tf.float32)
-    grid_y = tf.range(grid_size[1], dtype=tf.float32)
+    grid_y = tf.range(grid_size[0], dtype=tf.float32)
+    grid_x = tf.range(grid_size[1], dtype=tf.float32)
     a, b = tf.meshgrid(grid_x, grid_y)
     x_offset = tf.reshape(a, (-1, 1))
     y_offset = tf.reshape(b, (-1, 1))
