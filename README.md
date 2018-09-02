@@ -10,7 +10,7 @@ The End Is Always Near.
 
 - [x] **transformation Script**: Convert original [yolov3.weight](https://pjreddie.com/media/files/yolov3.weights) to Tensorflow style.
 - [x] **Backbone**:  Inference is available.
-- [ ] **Training operation**: Construction.
+- [ ] **Training operation**: Constructing.
 - [ ] ...
 
 ---
