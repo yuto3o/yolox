@@ -113,7 +113,7 @@ The process of detection is simple.
 ```python
 inputs = tf.placeholder(tf.float32, [None, 416, 416, 3])
 predictions = backbone(inputs, 80, is_training=False, scope='yolov3')
-predictions = yolo_utils.detections_boxes(predictions)
+
 # load weight
 saver = yolo_utils.restore_saver()
 coco_name = yolo_utils.load_coco_name(coco_name_path)

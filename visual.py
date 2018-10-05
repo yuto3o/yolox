@@ -19,6 +19,14 @@ def vis(imgs, predictions, input_size, coco_name, output=None):
   for img, prediction in zip(imgs, predictions):
     for label, bboxes in prediction.items():
       for bbox, confidence in bboxes:
+        bboxes_xy = bbox[0:2]
+        bboxes_wh = bbox[2:4]
+        bbox_xminymin = bboxes_xy-bboxes_wh/2.
+        bbox_xmaxymax= bboxes_xy+bboxes_wh/2.
+
+        bbox[0:2] = bbox_xminymin
+        bbox[2:4]= bbox_xmaxymax
+
         bbox = descale(img.shape[-2::-1], input_size, bbox)
         print(coco_name[label], ':', confidence)
         print('--- bbox:', bbox)
@@ -44,8 +52,6 @@ def descale(orignal_size, input_size, bbox):
 
   scale = np.divide(orignal_size, input_size)
   bbox = np.reshape((np.reshape(bbox,[2,2])*scale),-1)
-  print(scale)
-  print(bbox)
   return tuple(bbox.astype(np.int))
 
 

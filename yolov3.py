@@ -2,9 +2,7 @@
 import tensorflow as tf
 slim  = tf.contrib.slim
 
-_ANCHORS = [(10, 13), (16, 30), (33, 23),
-            (30, 61), (62, 45), (59, 119),
-            (116, 90), (156, 198), (373, 326)]
+import config
 
 def arg_scope(batch_norm_decay=0.997,
               batch_norm_epsilon=1e-5,
@@ -21,7 +19,7 @@ def arg_scope(batch_norm_decay=0.997,
   with slim.arg_scope([slim.conv2d],
                       activation_fn=leaky_relu,
                       weights_initializer=slim.variance_scaling_initializer(),
-                      weights_regularizer=slim.l2_regularizer(weight_decay),# can be move
+                      weights_regularizer=slim.l2_regularizer(weight_decay),# can be removed
                       normalizer_fn=slim.batch_norm,
                       normalizer_params=batch_norm_params
                       ) as arg_sc:
@@ -30,7 +28,7 @@ def arg_scope(batch_norm_decay=0.997,
 def backbone(inputs, n_classes, is_training=True, scope='yolov3'):
   """Yolov3 backbone
   """
-  img_size = inputs.get_shape().as_list()[1:3]
+  img_size = inputs.get_shape().as_list()[1:3][::-1]
 
   with slim.arg_scope(arg_scope(is_training=is_training)):
     with tf.variable_scope(scope, 'yolov3', [inputs]):
@@ -66,7 +64,7 @@ def backbone(inputs, n_classes, is_training=True, scope='yolov3'):
       net = slim.conv2d(net, 255, 1,
                         activation_fn=None, normalizer_fn=None)
       # 82, yolo
-      yolo_1 = detect(net, _ANCHORS[6:9], n_classes, img_size, scope='yolo_1')
+      yolo_1 = yolo_head(net, config.anchor[6:9], n_classes, img_size, scope='yolo_1')
 
       # 83, route 79
       net = tf.concat([route_79], axis=-1)
@@ -92,8 +90,7 @@ def backbone(inputs, n_classes, is_training=True, scope='yolov3'):
       net = slim.conv2d(net, 255, 1,
                         activation_fn=None, normalizer_fn=None)
       # 94, yolo
-      yolo_2 = detect(net, _ANCHORS[3:6], n_classes, img_size, scope='yolo_2')
-
+      yolo_2 = yolo_head(net, config.anchor[3:6], n_classes, img_size, scope='yolo_2')
 
       # 95, route
       net = tf.concat([route_91], axis=-1)
@@ -114,9 +111,9 @@ def backbone(inputs, n_classes, is_training=True, scope='yolov3'):
       net = slim.conv2d(net, 255, 1,
                         activation_fn=None, normalizer_fn=None)
       # yolo
-      yolo_3 = detect(net, _ANCHORS[0:3], n_classes, img_size, scope='yolo_3')
+      yolo_3 = yolo_head(net, config.anchor[0:3], n_classes, img_size, scope='yolo_3')
 
-  detections = tf.concat([yolo_1, yolo_2, yolo_3], axis=1)
+      detections = tf.concat([yolo_1, yolo_2, yolo_3], axis=1)
   return detections
 
 def residual(inputs, depth, n_unit, scope='residual'):
@@ -131,11 +128,11 @@ def residual(inputs, depth, n_unit, scope='residual'):
 
 def unit(inputs, depth, scope='unit'):
   """Unit.
-  Args:
+  Params:
     inputs: A tensor of size [batch, height, width, channels].
     depth: The growth rate of the dense layer.
     scope: Optional variable_scope.
-  Returns:
+  Return:
     The dense layer's output.
   """
 
@@ -181,17 +178,22 @@ def conv2d_same(inputs,
       return slim.conv2d(inputs, num_outputs, kernel_size, stride=stride,
                          rate=rate, padding='VALID')
 
-def detect(inputs, anchors, n_classes, img_size, scope='detection'):
-  """Detect layer
+def yolo_head(inputs, anchors, n_classes, img_size, scope='yolo_head'):
+  """Head layer
+  Convert output of yolo network to bounding box parameters
+
+  Params:
+    img_size: w, h
+
+  Return:
+    xc, yc, w, h, confidence, label
   """
-  with tf.name_scope(scope, 'detection',[inputs]):
+  with tf.name_scope(scope, 'yolo_head', [inputs]):
     n_anchors = len(anchors)
     bbox_attrs = 5+n_classes
 
-#    predictions = slim.conv2d(inputs, n_anchors*bbox_attrs, 1, stride=1,
-#                              activation_fn=None, normalizer_fn=None)
     predictions = inputs
-    grid_size = predictions.get_shape().as_list()[1:3]
+    grid_size = predictions.get_shape().as_list()[1:3][::-1]
     n_dims = grid_size[0] * grid_size[1]
     predictions = tf.reshape(predictions, [-1, n_anchors * n_dims, bbox_attrs])
 
@@ -204,8 +206,9 @@ def detect(inputs, anchors, n_classes, img_size, scope='detection'):
     box_centers = tf.nn.sigmoid(box_centers)
     confidence = tf.nn.sigmoid(confidence)
 
-    grid_y = tf.range(grid_size[0], dtype=tf.float32)
-    grid_x = tf.range(grid_size[1], dtype=tf.float32)
+    grid_x = tf.range(grid_size[0], dtype=tf.float32)
+    grid_y = tf.range(grid_size[1], dtype=tf.float32)
+
     a, b = tf.meshgrid(grid_x, grid_y)
     x_offset = tf.reshape(a, (-1, 1))
     y_offset = tf.reshape(b, (-1, 1))
@@ -226,3 +229,97 @@ def detect(inputs, anchors, n_classes, img_size, scope='detection'):
     predictions = tf.concat([detections, classes], axis=-1)
 
     return predictions
+
+
+def loss(predictions, labels, n_classes, ignore_thresh=0.5, scope='yolo_loss'):
+  """Yolo loss
+  """
+  lambda_coord = 5.0
+  lambda_noobj = 0.5
+
+  loss = 0.0
+
+  assert len(predictions)==len(labels), "prediction and labels should have the same layers"
+  batch_size = predictions.shape[0]
+
+  with tf.name_scope(scope, 'yolo_loss', [predictions, labels]):
+
+    bbox, conf, classes = tf.split(predictions,
+                                    [4,1,n_classes],
+                                    axis=-1)
+    bbox_hat,conf_hat,classes_hat = tf.split(labels,
+                                             [4,1,n_classes],
+                                             axis=-1)
+
+    # Find ignore mask, iterate over each of batch.
+    ignore_mask = tf.TensorArray(labels.dtype, size=1, dynamic_size=True)
+    object_mask_bool = tf.cast(conf_hat, 'bool')
+
+    def loop_body(b, ignore_mask):
+      true_box = tf.boolean_mask(bbox_hat[b], object_mask_bool[b,...,0])
+      iou = box_iou(bbox[b], true_box)
+      best_iou = tf.maximum(iou, axis=-1)
+      ignore_mask = ignore_mask.write(b, tf.cast(best_iou<ignore_thresh, true_box.dtype))
+      return b+1, ignore_mask
+
+    _, ignore_mask = tf.s.while_loop(lambda b,*args: b<batch_size, loop_body, [0, ignore_mask])
+    ignore_mask = ignore_mask.stack()
+    ignore_mask = tf.expand_dims(ignore_mask, -1)
+
+    obj = conf_hat
+    noobj = 1. - obj
+
+    coord_loss = obj*(tf.reduce_sum(tf.square(bbox[..., 0:2]-bbox_hat[..., 0:2]), keepdims=True)+
+                      tf.reduce_sum(tf.square(tf.sqrt(bbox[..., 2:4])-tf.sqrt(bbox_hat[..., 2:4])), keepdims=True))
+    coord_loss *= lambda_coord
+    coord_loss = tf.reduce_sum(coord_loss,axis=1)
+
+    iou_loss = tf.reduce_sum(obj*tf.nn.sigmoid_cross_entropy_with_logits(logits=conf, labels=conf_hat) +
+                             lambda_noobj*noobj*tf.nn.sigmoid_cross_entropy_with_logits(logits=conf, labels=conf_hat)
+                             *ignore_mask,
+                             axis=1)
+    class_loss = tf.reduce_sum(obj*tf.nn.sigmoid_cross_entropy_with_logits(logits=classes, labels=classes_hat),
+                               axis=1)
+
+    _loss = coord_loss + iou_loss + class_loss
+    loss += tf.reduce_mean(_loss)
+
+    tf.losses.add_loss(loss)
+    loss = tf.losses.get_total_loss()
+
+  return loss
+
+def box_iou(box1, box2):
+  """Computes Intersection over Union value for 2 bounding boxes
+
+  Params:
+    xc, yc, w, h
+  """
+  box1_xyxy = yolo_boxes_to_corners(box1)
+  box2_xyxy = yolo_boxes_to_corners(box2)
+
+  intersect_min = tf.maximum(box1_xyxy[...,0:2], box1_xyxy[...,0:2])
+  intersect_max = tf.minimum(box2_xyxy[...,2:4], box2_xyxy[...,2:4])
+  intersect_wh = tf.maximum(intersect_max-intersect_min, 0)
+  intersect_area = intersect_wh[..., 0]*intersect_wh[..., 1]
+
+  bbox1_area = box1[..., 2]*box1[..., 3]
+  bbox2_area = box2[..., 2]*box2[..., 3]
+
+  eps = 1e-5
+  iou = intersect_area/(bbox1_area+bbox2_area-intersect_area+eps)
+  return iou
+
+def yolo_boxes_to_corners(bbox):
+  """Convert xc, yc, w, h to xmin, ymin, xmax, ymax along last axis
+  """
+  bbox_others = tf.split(bbox, [4, -1], axis=-1)
+  bbox_min = bbox[...,0:2] - bbox[...,2:4]/2.
+  bbox_max = bbox[...,0:2] + bbox[...,2:4]/2.
+  bbox = tf.concat([bbox_min, bbox_max, bbox_others], axis=-1)
+  return bbox
+
+
+
+
+
