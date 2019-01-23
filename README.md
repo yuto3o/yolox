@@ -1,4 +1,4 @@
-# KISS YOLOv3
+# YOLOv3
 
 **YOLOv3 in Tensorflow(TF-Slim)**
 
@@ -6,11 +6,11 @@
 | :----: | :--------: | :----: |
 | 3.6.5  |   1.8.0    | 3.3.1  |
 
-The End Is Always Near.
+Refactor All the Codes
 
 - [x] **transformation Script**: Convert original [yolov3.weight](https://pjreddie.com/media/files/yolov3.weights) to Tensorflow style.
-- [x] **Backbone**:  Inference is available.
-- [ ] **Training operation**: Constructing.
+- [x] **forward**:  Inference is available.(Tested)
+- [ ] **Training operation**: Losses have be implemented.(Not Tested)
 - [ ] ...
 
 ---
@@ -88,50 +88,66 @@ Conv_0/BatchNorm/moving_variance
 ## **Backbone**
 
 ```python
-from yolov3 import backbone
-import yolo_utils
-import visual
+import tensorflow as tf
+import cv2
+import numpy as np
 
-# you can find all of them in ./yolov3
-ckpt_path = "./yolov3/yolov3.ckpt"
-coco_name_path = "./yolov3/coco.name"
-dog_jpg_path = './yolov3/dog.jpg'
-output_path = './yolov3/detection.jpg'
+import vis
+from model.yolo import YOLOv3
+
+# you can find all of them in ./src
+ANCHORS = [(10, 13), (16, 30), (33, 23),
+          (30, 61), (62, 45), (59, 119),
+          (116, 90), (156, 198), (373, 326)]
+
+NUM_CLASS = 80
+
+ckpt_path = "./src/yolov3.ckpt"
+coco_name_path = "./src/coco.name"
+dog_jpg_path = "./src/dog.jpg"
+bird_jpg_path = "./src/birds.jpg"
 ```
 
-We test the program with minibatch(batch size=1), so the input is made firstly(A 4-D tensor, [Batch_size, Height, Width, Channel] ). Normalizing the pixel value is also necessary.
+We test the program with the minibatch(batch size=1, 2), so the input is generated firstly(A 4-D tensor, [Batch_size, Height, Width, Channel] ). Normalizing the pixel value is also necessary.
 
 ```python
 img = cv2.imread(dog_jpg_path)
 img_resized = cv2.resize(img, (416, 416))
 img_rgb = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
-img_float = np.expand_dims(img_rgb/255., axis=0)
+dog = np.expand_dims(img_rgb/255., axis=0) #[1, 416, 416, 3]
+
+img = cv2.imread(bird_jpg_path)
+img_resized = cv2.resize(img, (416, 416))
+img_rgb = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
+bird = np.expand_dims(img_rgb/255., axis=0) #[1, 416, 416, 3]
+
+imgs = np.concatenate([dog, bird], axis=0) #[2, 416, 416, 3]
 ```
 
 The process of detection is simple.
 
 ```python
-inputs = tf.placeholder(tf.float32, [None, 416, 416, 3])
-predictions = backbone(inputs, 80, is_training=False, scope='yolov3')
+yolov3 = YOLOv3(ANCHORS, NUM_CLASS)
+x = tf.placeholder(tf.float32, [None, 416, 416, 3])
+feature = yolov3.forward(x)
+bboxes, scores, labels = yolov3.decode_feature(feature)
 
-# load weight
-saver = yolo_utils.restore_saver()
-coco_name = yolo_utils.load_coco_name(coco_name_path)
-
+saver = YOLOv3.load_weight()
 with tf.Session() as sess:
-    saver.restore(sess, ckpt_path)
-    predictions = sess.run(predictions, feed_dict={inputs: img_float})	
+  saver.restore(sess, ckpt_path) # restore yolov3 parameters
+  bboxes, scores, labels = sess.run([bboxes, scores, labels], feed_dict={x:imgs})
 ```
 
 A simple visualization API is also provided.
 
 ```python
-predictions = yolo_utils.non_max_suppression(predictions)
-imgs = [img]
-visual.vis(imgs, predictions, (416, 416), coco_name, output_path)
+coco_name = YOLOv3.load_coco_name(coco_name_path)
+vis.plot(imgs, bboxes, scores, labels, coco_name, output_path)
 ```
 
-![dog](./yolov3/detection.jpg)
+![dog](./src/detection1.jpg)
 
 
+
+![birds](./src/detection2.jpg)
 
