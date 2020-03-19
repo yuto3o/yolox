@@ -3,6 +3,59 @@ from collections import OrderedDict
 import numpy as np
 
 
+def read_file(path, split='='):
+    cfg = OrderedDict()
+    nlayer = -2
+    with open(path) as file:
+        for line in file:
+            line = line.strip()
+            if not len(line) or line.startswith('#'):
+                continue
+
+            if line.startswith('['):
+                nlayer += 1
+                section = line.strip('[]')
+                cfg[nlayer] = {'section': section}
+            else:
+                key, value = line.split(split)
+                cfg[nlayer][key.strip()] = value.strip()
+    return cfg
+
+
+def keras_adapter(weights):
+    """ weights: (section, conv_weights, conv_bias/beta, bn_weights)
+                  bn_weights: (gamma, mean, variance)
+        output_path:
+        name_kw: {default_conv_name: custom_conv_name}
+    """
+    print('Encode weights...')
+    var_list = {}
+
+    for section, conv_weights, conv_bias, bn_weights in weights:
+        # DarkNet conv_weights are serialized Caffe-style:
+        # (out_dim, in_dim, height, width)
+        # We would like to set these to Tensorflow order:
+        # (height, width, in_dim, out_dim)
+        conv_weights = np.transpose(conv_weights, [2, 3, 1, 0])
+        # encode
+        name = section
+
+        if bn_weights is None:
+            var_list[name] = [conv_weights, conv_bias]
+        else:
+            bn_gamma = bn_weights[0]
+            bn_beta = conv_bias
+            bn_mean = bn_weights[1]
+            bn_var = bn_weights[2]
+
+            var_list[name] = [conv_weights]
+            var_list['_bn_'.join(name.split('_'))] = [bn_gamma, bn_beta, bn_mean, bn_var]
+
+    print('Model Parameters:')
+
+    return var_list
+
+
 class YoloParser:
 
     def __init__(self, model, cfg_path, weights_path, output_path, input_dims=3):
@@ -17,32 +70,14 @@ class YoloParser:
         """One shoot one kill
         """
         print('Reading .cfg file ...')
-        cfg = self.read_file(self._cfg_path)
+        cfg = read_file(self._cfg_path)
         print('Converting ...')
         print('From %s' % self._weights_path)
         print('To   %s' % self._output_path)
         weights = self.decode(cfg, self._weights_path)
-        var_list = self.keras_adapter(weights)
+        var_list = keras_adapter(weights)
         self.keras_load_and_save(var_list)
         print('Finish !')
-
-    def read_file(self, path, split='='):
-        cfg = OrderedDict()
-        nlayer = -1
-        with open(path) as file:
-            for line in file:
-                line = line.strip()
-                if not len(line) or line.startswith('#'):
-                    continue
-
-                if line.startswith('['):
-                    nlayer += 1
-                    section = line.strip('[]')
-                    cfg[nlayer] = {'section': section}
-                else:
-                    key, value = line.split(split)
-                    cfg[nlayer][key.strip()] = value.strip()
-        return cfg
 
     def decode(self, cfg, path, split=','):
 
@@ -92,7 +127,8 @@ class YoloParser:
                     buffer=weights_file.read(weights_size * 4))
 
                 prev_filter = filters
-                # print('Convolution %d:'%n_conv, cfg[nlayer]['section'], conv_weights.shape)
+                # print('Convolution %d:' % n_conv, conv_weights.shape, conv_bias.shape,
+                #       bn_weights if bn_weights is None else bn_weights.shape)
                 yield 'Conv_%d' % n_conv, conv_weights, conv_bias, bn_weights
                 n_conv += 1
 
@@ -107,6 +143,7 @@ class YoloParser:
                         i -= 1
 
                     prev_filter += int(cfg[i]['filters'])
+
             elif cfg[nlayer]['section'].startswith('shortcut'):
                 prev_filter = int(cfg[nlayer - 1]['filters'])
 
@@ -133,39 +170,6 @@ class YoloParser:
         else:
             print('Success!')
 
-    def keras_adapter(self, weights):
-        """ weights: (section, conv_weights, conv_bias/beta, bn_weights)
-                      bn_weights: (gamma, mean, variance)
-            output_path:
-            name_kw: {default_conv_name: custom_conv_name}
-        """
-        print('Encode weights...')
-        var_list = {}
-
-        for section, conv_weights, conv_bias, bn_weights in weights:
-            # DarkNet conv_weights are serialized Caffe-style:
-            # (out_dim, in_dim, height, width)
-            # We would like to set these to Tensorflow order:
-            # (height, width, in_dim, out_dim)
-            conv_weights = np.transpose(conv_weights, [2, 3, 1, 0])
-            # encode
-            name = section
-
-            if bn_weights is None:
-                var_list[name] = [conv_weights, conv_bias]
-            else:
-                bn_gamma = bn_weights[0]
-                bn_beta = conv_bias
-                bn_mean = bn_weights[1]
-                bn_var = bn_weights[2]
-
-                var_list[name] = [conv_weights]
-                var_list['_bn_'.join(name.split('_'))] = [bn_gamma, bn_beta, bn_mean, bn_var]
-
-        print('Model Parameters:')
-
-        return var_list
-
     def keras_load_and_save(self, var_list):
 
         keras_layers = self._model.layers
@@ -187,9 +191,11 @@ class YoloParser:
         batchnorm = sorted(batchnorm, key=lambda x: int(x.name.split('_')[-1]) if 'normalization_' in x.name else 0)
 
         for a, b in zip(var_conv, conv):
+            # print("Assign", a, b.name)
             b.set_weights(var_list[a])
 
         for a, b in zip(var_bn, batchnorm):
+            # print("Assign", a)
             b.set_weights(var_list[a])
 
         self._model.save_weights(self._output_path)
@@ -198,22 +204,35 @@ class YoloParser:
 if __name__ == "__main__":
     import argparse
 
-    from yolo.yolov3 import YoloV3
-
     parser = argparse.ArgumentParser(description="Convert yolov3.weights to yolov3.h5")
 
-    parser.add_argument("-c", "--cfg", required=True,
+    parser.add_argument("--tiny", action='store_true',
+                        help="for yolo-tiny")
+
+    parser.add_argument("--cfg", required=True,
                         help="path to yolov3.cfg")
 
-    parser.add_argument("-w", "--weights", required=True,
+    parser.add_argument("--weights", required=True,
                         help='path to yolov3.weights')
 
-    parser.add_argument("-o", "--output", default="./yolov3.h5",
+    parser.add_argument("--output", default="./yolov3.h5",
                         help="path to output file")
+
+
 
     args = parser.parse_args()
 
-    YoloParser(YoloV3(),
-               args.cfg,
-               args.weights,
-               args.output).run()
+    if args.tiny:
+        from yolo.yolov3_tiny import YoloV3_Tiny
+
+        YoloParser(YoloV3_Tiny(),
+                   args.cfg,
+                   args.weights,
+                   args.output).run()
+    else:
+        from yolo.yolov3 import YoloV3
+
+        YoloParser(YoloV3(),
+                   args.cfg,
+                   args.weights,
+                   args.output).run()

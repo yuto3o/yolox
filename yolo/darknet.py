@@ -1,18 +1,8 @@
-import yaml
-import logging
-
 from tensorflow.keras.layers import Conv2D, BatchNormalization, LeakyReLU, ZeroPadding2D, Add
 from tensorflow.keras.regularizers import l2
 
-with open('yolo/config.yaml', 'r') as f:
-    config = yaml.safe_load(f.read())
-
-WEIGHT_DECAY = config['basic']['weight_decay']
-LEAKY_ALPHA = config['basic']['leaky_alpha']
-
-msg = "Loading YoloV3 Config: {} = {}"
-logging.info(msg.format('weight_decay', WEIGHT_DECAY))
-logging.info(msg.format('leaky_alpha', LEAKY_ALPHA))
+WEIGHT_DECAY = 5e-4
+LEAKY_ALPHA = 0.1
 
 
 def DarknetConv2D(*args, **kwargs):

@@ -8,14 +8,14 @@
 
 Refactor All the Codes
 - [x] **News**: TensorFlow 2.0 is available !
-- [x] **Script**: Convert original [yolov3.weight](https://pjreddie.com/media/files/yolov3.weights) to Keras hdf5 style.
+- [x] **Script**: Convert original yolov3.weight & yolov3.cfg to Keras style(hdf5).
 - [x] **Inference**:  Inference is available. 
 - [ ] **Training**: Next Step.
 - [ ] ...
 
----
-
 ![dog](./disc/dog_detect_2.jpg)
+
+---
 
 ## Transformation
 
@@ -25,6 +25,10 @@ Run the below command (you need TensorFlow, Numpy and Python only).
 
 ```shell
 python convert.py --config=path/to/yolov3.cfg --weights=path/to/yolov3.cfg --output=path/to/yolov3.h5 
+
+or
+
+python convert.py --tiny --config=path/to/yolov3-tiny.cfg --weights=path/to/yolov3-tiny.cfg --output=path/to/yolov3-tiny.h5 
 ```
 
 ```shell
@@ -37,24 +41,33 @@ Weights Header:  0 2 0 [32013312]
 Success!
 Model Parameters:
 Finish !
+
+or
+
+Reading .cfg file ...
+Converting ...
+From path/to/yolov3-tiny.weights
+To   path/to/yolov3-tiny.h5
+Encode weights...
+Weights Header:  0 2 0 [32013312]
+Success!
+Model Parameters:
+Finish !
 ```
 
 ---
 
 ## Inference
 
-All of the hyper parameters about YoloV3 are defined in /yolov3/yolo/config.yaml.
+All of the hyper parameters about YoloV3 are defined in /yolov3/yolo/cfg/yolov3.yaml.
 ```yaml
 inference:
   iou_threshold: 0.5
   score_threshold: 0.5
-  num_classes: 80
   max_boxes: 100
 
 basic:
-  weight_decay: 5e-4
-  leaky_alpha: 0.1
-
+  num_classes: 80
   image_size: 416
   anchors: "10,13 16,30 33,23 30,61 62,45 59,119 116,90 156,198 373,326"
   mask: "6,7,8 3,4,5 0,1,2"
@@ -67,9 +80,11 @@ import cv2
 import numpy as np
 
 from yolo.yolov3 import YoloV3
+# from yolo.yolov3_tiny import YoloV3_Tiny
 from dataset.paint import transform, draw_bboxes, load_names, assign_name_and_color
 
 model = YoloV3()
+# model = YoloV3_Tiny()
 model.summary()
 
 model.load_weights("path/to/yolov3.h5")

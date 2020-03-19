@@ -1,13 +1,10 @@
 inference:
   iou_threshold: 0.5
   score_threshold: 0.5
-  num_classes: 80
   max_boxes: 100
 
 basic:
-  weight_decay: 5e-4
-  leaky_alpha: 0.1
-
+  num_classes: 80
   image_size: 416
   anchors: "10,13 16,30 33,23 30,61 62,45 59,119 116,90 156,198 373,326"
   mask: "6,7,8 3,4,5 0,1,2"
