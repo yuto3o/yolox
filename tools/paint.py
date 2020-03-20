@@ -22,7 +22,7 @@ def draw_bboxes(img, bboxes, scores, clss, names_list):
         bbox = transform(bbox, (w, h))
         bbox = tuple(bbox)
 
-        img = cv2.rectangle(img, bbox[0:2], bbox[2:4], color, 5)
+        img = cv2.rectangle(img, bbox[0:2], bbox[2:4], color, 2)
         img = cv2.rectangle(img, (bbox[0], bbox[1] - y - base),
                             (bbox[0] + x, bbox[1]),
                             color, -1)

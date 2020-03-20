@@ -48,7 +48,7 @@ class SimpleGenerator:
 
                 annotation = self.annotations[index]
                 # boxes: x1, y1, x2, y2, label
-                image, bboxes = parse_annotation(annotation, image_size)
+                image, bboxes = parse_annotation(annotation, (image_size, image_size))
                 # TODO: image augment
 
                 bboxes_label = self.preprocess_true_boxes(bboxes)

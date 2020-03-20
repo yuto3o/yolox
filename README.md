@@ -8,7 +8,10 @@
 
 Refactor All the Codes
 - [x] **News**: TensorFlow 2.0 is available !
-- [x] **Script**: Convert original yolov3.weight & yolov3.cfg to Keras style(hdf5).
+- [x] **Script**: 
+  - [x] convert original yolov3.weight & yolov3.cfg to Keras style(hdf5).
+  - [x] convert frames to a video
+  - [x] not only image, but also video or web camera
 - [x] **Core Components**:
   - [x] more easy api for inference
   - [x] reconstruct this project
@@ -21,11 +24,12 @@ Refactor All the Codes
 
 ## Script
 
+### From yolov3.weights to yolov3.h5
 Download yolov3.weight and yolov3.cfg from the [Homepage](https://pjreddie.com/darknet/yolo/).
 
 Run the below command (you need TensorFlow, Numpy and Python only).
 
-```shell
+```shell script
 python convert.py --config=path/to/yolov3.cfg --weights=path/to/yolov3.cfg --output=path/to/yolov3.h5 
 
 or
@@ -33,7 +37,7 @@ or
 python convert.py --tiny --config=path/to/yolov3-tiny.cfg --weights=path/to/yolov3-tiny.cfg --output=path/to/yolov3-tiny.h5 
 ```
 
-```shell
+```shell script
 Reading .cfg file ...
 Converting ...
 From path/to/yolov3.weights
@@ -56,6 +60,23 @@ Success!
 Model Parameters:
 Finish !
 ```
+
+### From frame to video
+XVID for MP4
+```shell script
+python pic2vid.py --src=path/to/frames --dst=path/to/video --fps=25 --format=XVID
+```
+
+### Scan a video or a web camera 
+
+```shell script
+python sensor.py --src=path/to/video(or device id) --dst=path/to/output --config=path/to/yolov3.config --tiny=False
+
+or
+
+python sensor.py --src=path/to/video(or device id) --dst=path/to/output --config=path/to/yolov3-tiny.config --tiny=True
+```
+![street](./disc/street.png)
 
 ---
 

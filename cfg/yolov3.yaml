@@ -1,6 +1,6 @@
 yolo:
-  iou_threshold: 0.45
-  score_threshold: 0.3
+  iou_threshold: 0.5
+  score_threshold: 0.5
   max_boxes: 100
   classes: "./disc/coco.name"
   strides: "32,16,8"

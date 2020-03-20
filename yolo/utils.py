@@ -45,10 +45,10 @@ def parse_annotation(annotation, size):
     return image, bboxes
 
 
-def preprocess_image(size, image_path, bboxes=None):
-    image = cv2.cvtColor(image_path, cv2.COLOR_BGR2RGB).astype(np.float32)
+def preprocess_image(size, image, bboxes=None):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
 
-    iw, ih = size, size
+    iw, ih = size
     h, w, _ = image.shape
 
     scale = min(iw / w, ih / h)

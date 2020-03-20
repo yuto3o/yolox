@@ -1,1 +1,1 @@
-C:\Users\yuyang\Documents\codehub\yolov3\disc\dog.jpg 124,312,314,639,16 77,151,435,417,1 479,182,686,261,7
+C:\Users\yuyang\Documents\codehub\yolov3\disc\dog.jpg 126,206,314,543,16 101,108,577,435,1 467,78,690,170,7
