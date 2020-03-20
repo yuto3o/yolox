@@ -9,15 +9,17 @@
 Refactor All the Codes
 - [x] **News**: TensorFlow 2.0 is available !
 - [x] **Script**: Convert original yolov3.weight & yolov3.cfg to Keras style(hdf5).
-- [x] **Inference**:  Inference is available. 
+- [x] **Core Components**:
+  - [x] more easy api for inference (2020-03-20)
+  - [x] reconstruct this project (2020-03-20)
 - [ ] **Training**: Next Step.
-- [ ] ...
-
-![dog](./disc/dog_detect_2.jpg)
+  - [x] loss function is added (not test) (2020-03-19)
+  - [x] simple data pipeline is available. (2020-03-20)
+  - [ ] ...
 
 ---
 
-## Transformation
+## Script
 
 Download yolov3.weight and yolov3.cfg from the [Homepage](https://pjreddie.com/darknet/yolo/).
 
@@ -57,20 +59,34 @@ Finish !
 
 ---
 
-## Inference
+## Core 
 
-All of the hyper parameters about YoloV3 are defined in /yolov3/yolo/cfg/yolov3.yaml.
+All of the hyper parameters about YoloV3 are defined in /yolov3/cfg
 ```yaml
-inference:
-  iou_threshold: 0.5
-  score_threshold: 0.5
+# yolov3.yaml
+yolo:
+  iou_threshold: 0.45
+  score_threshold: 0.3
   max_boxes: 100
+  classes: "./disc/coco.name"
+  strides: "32,16,8"
 
-basic:
-  num_classes: 80
-  image_size: 416
   anchors: "10,13 16,30 33,23 30,61 62,45 59,119 116,90 156,198 373,326"
   mask: "6,7,8 3,4,5 0,1,2"
+
+train:
+  annot_path: "disc/annotation.txt"
+  image_size: "320,352,384,416,448,480,512,544,576,608"
+  warmup_epoch: 2
+  lr_init: 5e-3
+  lr_end: 1e-6
+  batch_size: 1
+  num_epoch: 40
+  init_weights: ""
+
+test:
+  image_size: "416"
+  init_weights: "checkpoints/yolov3/yolov3.h5"
 ```
 
 With the methods we have defined, visualizing the result is an easy work.
@@ -79,65 +95,39 @@ With the methods we have defined, visualizing the result is an easy work.
 import cv2
 import numpy as np
 
+from yolo import config
 from yolo.yolov3 import YoloV3
-# from yolo.yolov3_tiny import YoloV3_Tiny
-from dataset.paint import transform, draw_bboxes, load_names, assign_name_and_color
+from tools.paint import draw_bboxes
 
-model = YoloV3()
-# model = YoloV3_Tiny()
+cfg = config.load('cfg/yolov3.yaml')
+names_list = cfg['yolo']['classes']
+
+model = YoloV3(cfg)
 model.summary()
+model.load_weights(cfg['test']['init_weights'])
 
-model.load_weights("path/to/yolov3.h5")
-
-names_list = load_names("./disc/coco.name")
-img = img_raw = cv2.imread("./disc/dog.jpg")
-img = cv2.resize(img, (416, 416))
+# define input
+## image : RGB, float32
+img = cv2.imread('./disc/dog.jpg')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-# make a batch, batch_size = 1
 imgs = np.expand_dims(img / 255., 0).astype(np.float32)
 
 boxes, scores, classes, valid_detections = model.predict(imgs)
-
-#  Canvas
-## Invert
-imgs = imgs[..., ::-1]
-imgs *= 255
-imgs = imgs.astype(np.uint8)
 
 for img, box, score, cls, valid in zip(imgs, boxes, scores, classes, valid_detections):
     valid_boxes = box[:valid]
     valid_score = score[:valid]
     valid_cls = cls[:valid]
 
-    # Relative to Absolute
-    bboxes = transform(valid_boxes, img.shape[1::-1])
-
-    names, colors = [], []
-    for idx in valid_cls:
-        name, color = assign_name_and_color(int(idx), names_list)
-        names.append(name)
-        colors.append(color)
-
-    img = draw_bboxes(img, bboxes, valid_score, names, colors)
+    img = draw_bboxes(img, valid_boxes, valid_score, valid_cls, names_list)
 
     cv2.imshow('img', img)
-
     cv2.waitKey()
 ```
 
-![dog](./disc/dog_detect_1.jpg)
+![dog](./disc/dog_ans.jpg)
 
-By the way, the output will be fixed to 416x416. If you want to keep the original size, all you need is the original image.
 
-```python
-#  Canvas
-## Invert
-# imgs = imgs[..., ::-1]
-# imgs *= 255
-# imgs = imgs.astype(np.uint8)
-imgs = [img_raw]
-```
 
 
 

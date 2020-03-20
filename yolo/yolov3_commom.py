@@ -1,22 +1,81 @@
-from tensorflow.keras.layers import Lambda
+from tensorflow.keras.layers import Lambda, Conv2D, BatchNormalization, LeakyReLU, ZeroPadding2D, Add, Layer
 from tensorflow.keras.losses import binary_crossentropy
+from tensorflow.keras.regularizers import l2
 
 import tensorflow as tf
 
+WEIGHT_DECAY = 5e-4
+LEAKY_ALPHA = 0.1
 
-def Yolo_Boxes(num_classes, anchors, name=None):
-    return Lambda(lambda x: _yolo_boxes(x, num_classes, anchors), name=name)
+
+def DarknetConv2D(*args, **kwargs):
+    darknet_conv_kwargs = {'kernel_regularizer': l2(WEIGHT_DECAY), 'padding': 'valid' if kwargs.get(
+        'strides') == (2, 2) else 'same'}
+    darknet_conv_kwargs.update(kwargs)
+
+    return Conv2D(*args, **darknet_conv_kwargs)
 
 
-def _yolo_boxes(logits, num_classes, anchors):
+def DarknetConv2D_BN_Leaky(*args, **kwargs):
+    without_bias_kwargs = {'use_bias': False}
+    without_bias_kwargs.update(kwargs)
+
+    def wrapper(x):
+        x = DarknetConv2D(*args, **without_bias_kwargs)(x)
+        x = BatchNormalization()(x)
+        x = LeakyReLU(alpha=LEAKY_ALPHA)(x)
+        return x
+
+    return wrapper
+
+
+def DarknetBlock(filters, niter):
+    def wrapper(x):
+        x = ZeroPadding2D(((1, 0), (1, 0)))(x)  # top left half-padding
+        x = DarknetConv2D_BN_Leaky(filters, (3, 3), strides=(2, 2))(x)
+        for _ in range(niter):
+            y = DarknetConv2D_BN_Leaky(filters // 2, (1, 1))(x)
+            y = DarknetConv2D_BN_Leaky(filters, (3, 3))(y)
+            x = Add()([x, y])
+        return x
+
+    return wrapper
+
+
+class UpSampleLike(Layer):
+
+    def __init__(self, y, **kwargs):
+        self.target_shape = y.shape.as_list()[1:3]
+        super(UpSampleLike, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        # Create a trainable weight variable for this layer.
+        super(UpSampleLike, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, x):
+        return tf.image.resize(x, self.target_shape, tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0], self.target_shape[0], self.target_shape[1], input_shape[-1]
+
+
+def Yolo_Boxes(num_classes, anchors, stride, name=None):
+    return Lambda(lambda x: _yolo_boxes(x, num_classes, anchors, stride), name=name)
+
+
+def _yolo_boxes(logits, num_classes, anchors, stride):
     """logits: (batch_size, grid, grid, num_anchors*(5 + num_classes))
     """
     x_shape = tf.shape(logits)
-    logits = Lambda(
-        lambda x: tf.reshape(x, (x_shape[0], x_shape[1], x_shape[2], len(anchors), num_classes + 5)))(logits)
+
+    logits = tf.reshape(logits, (x_shape[0], x_shape[1], x_shape[2], anchors.shape[0], num_classes + 5))
+    anchors = tf.cast(anchors, tf.float32)
 
     grid_shape = x_shape[1:3]
     grid_h, grid_w = grid_shape[0], grid_shape[1]
+
+    anchors /= tf.cast(tf.multiply([grid_w, grid_h], stride), tf.float32)
+
     box_xy, box_wh, obj, cls = tf.split(
         logits, (2, 2, 1, num_classes), axis=-1)
 
@@ -29,65 +88,63 @@ def _yolo_boxes(logits, num_classes, anchors):
     grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)  # [gx, gy, 1, 2]
 
     box_xy = (box_xy + tf.cast(grid, tf.float32)) / tf.cast([grid_w, grid_h], tf.float32)
-    box_wh = tf.exp(box_wh) * anchors
+    box_wh = tf.exp(box_wh) * tf.cast(anchors, tf.float32)
 
     box_x1y1 = box_xy - box_wh / 2
     box_x2y2 = box_xy + box_wh / 2
     box = tf.concat([box_x1y1, box_x2y2], axis=-1)
 
-    batch = x_shape[0]
-    box = tf.reshape(box, [batch, -1, 4])
-    obj = tf.reshape(obj, [batch, -1, 1])
-    cls = tf.reshape(cls, [batch, -1, num_classes])
-    pred_box = tf.reshape(pred_box, [batch, -1, 4])
-
     return box, obj, cls, pred_box
 
 
 def Yolo_NMS(max_boxes, iou_threshold, score_threshold, name=None):
-    def wrapper(inputs):
-        # boxes, conf, type
-        box, obj, cls = [], [], []
-
-        for _box, _obj, _cls in inputs:
-            box.append(_box)
-            obj.append(_obj)
-            cls.append(_cls)
-
-        box = tf.concat(box, axis=1)
-        obj = tf.concat(obj, axis=1)
-        cls = tf.concat(cls, axis=1)
-
-        scores = obj * cls
-        boxes, scores, classes, valid = tf.image.combined_non_max_suppression(
-            boxes=tf.reshape(box, (tf.shape(box)[0], -1, 1, 4)),
-            scores=tf.reshape(
-                scores, (tf.shape(scores)[0], -1, tf.shape(scores)[-1])),
-            max_output_size_per_class=max_boxes,
-            max_total_size=max_boxes,
-            iou_threshold=iou_threshold,
-            score_threshold=score_threshold
-        )
-
-        return boxes, scores, classes, valid
-
-    return Lambda(wrapper, name=name)
+    return Lambda(lambda x: _yolo_nms(x, max_boxes, iou_threshold, score_threshold), name=name)
 
 
-def Yolo_Loss(anchors, num_classes, ignore_thresh):
+def _yolo_nms(inputs, max_boxes, iou_threshold, score_threshold):
+    box, obj, cls = [], [], []
+
+    for _box, _obj, _cls in inputs:
+        batch = tf.shape(_box)[0]
+        _box = tf.reshape(_box, [batch, -1, 4])
+        _obj = tf.reshape(_obj, [batch, -1, 1])
+        num_classes = tf.shape(_cls)[-1]
+        _cls = tf.reshape(_cls, [batch, -1, num_classes])
+
+        box.append(_box)
+        obj.append(_obj)
+        cls.append(_cls)
+
+    box = tf.concat(box, axis=1)
+    obj = tf.concat(obj, axis=1)
+    cls = tf.concat(cls, axis=1)
+
+    scores = obj * cls
+    boxes, scores, classes, valid = tf.image.combined_non_max_suppression(
+        boxes=tf.reshape(box, (tf.shape(box)[0], -1, 1, 4)),
+        scores=tf.reshape(
+            scores, (tf.shape(scores)[0], -1, tf.shape(scores)[-1])),
+        max_output_size_per_class=max_boxes,
+        max_total_size=max_boxes,
+        iou_threshold=iou_threshold,
+        score_threshold=score_threshold
+    )
+
+    return boxes, scores, classes, valid
+
+
+def Yolo_Loss(num_classes, anchors, stride, ignore_thresh):
     def wrapper(y_true, y_pred):
         # 1. transform all pred outputs
         # y_pred: (batch_size, grid, grid, num_anchors*(5 + num_classes))
         pred_box, pred_obj, pred_class, pred_xywh = _yolo_boxes(
-            y_pred, anchors, num_classes)
+            y_pred, num_classes, anchors, stride)
         pred_xy = pred_xywh[..., 0:2]
         pred_wh = pred_xywh[..., 2:4]
 
         # 2. transform all true outputs
         # y_true: (batch_size, grid, grid, anchors, (x1, y1, x2, y2, obj, cls))
-        true_box, true_obj, true_class_idx = tf.split(
-            y_true, (4, 1, 1), axis=-1)
-        true_class = tf.one_hot(true_class_idx, num_classes)
+        true_box, true_obj, true_class = tf.split(y_true, (4, 1, num_classes), axis=-1)
         true_xy = (true_box[..., 0:2] + true_box[..., 2:4]) / 2
         true_wh = true_box[..., 2:4] - true_box[..., 0:2]
 
