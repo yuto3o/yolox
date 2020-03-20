@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 
 from .utils import load_annotations, parse_annotation
@@ -6,20 +7,20 @@ from .utils import load_annotations, parse_annotation
 class SimpleGenerator:
 
     def __init__(self, mode, cfg):
-        assert mode in ['train', 'test']
+        assert mode in ["train", "test"]
 
-        self.num_classes = cfg['yolo']['num_classes']
-        self.mask = cfg['yolo']['mask']
-        self.anchors = cfg['yolo']['anchors']
-        self.max_boxes = cfg['yolo']['max_boxes']
+        self.num_classes = cfg["yolo"]["num_classes"]
+        self.mask = cfg["yolo"]["mask"]
+        self.anchors = cfg["yolo"]["anchors"]
+        self.max_boxes = cfg["yolo"]["max_boxes"]
 
-        self.path = cfg[mode]['annot_path']
+        self.path = cfg[mode]["annot_path"]
         self.annotations = load_annotations(self.path)
         self.num_samples = len(self.annotations)
-        self.image_size = cfg[mode]['image_size']
-        self.strides = cfg['yolo']['strides']
+        self.image_size = cfg[mode]["image_size"]
+        self.strides = cfg["yolo"]["strides"]
 
-        self.batch_size = cfg[mode]['batch_size']
+        self.batch_size = cfg[mode]["batch_size"]
         self.num_batch = self.num_samples // self.batch_size
         self.batch_count = 0
 

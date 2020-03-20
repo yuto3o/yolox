@@ -10,11 +10,11 @@ Refactor All the Codes
 - [x] **News**: TensorFlow 2.0 is available !
 - [x] **Script**: Convert original yolov3.weight & yolov3.cfg to Keras style(hdf5).
 - [x] **Core Components**:
-  - [x] more easy api for inference (2020-03-20)
-  - [x] reconstruct this project (2020-03-20)
+  - [x] more easy api for inference
+  - [x] reconstruct this project
 - [ ] **Training**: Next Step.
-  - [x] loss function is added (not test) (2020-03-19)
-  - [x] simple data pipeline is available. (2020-03-20)
+  - [x] loss function is added (not test)
+  - [x] simple data pipeline is available.
   - [ ] ...
 
 ---
@@ -84,9 +84,11 @@ train:
   num_epoch: 40
   init_weights: ""
 
+  ignore_threshold: 0.7
+
 test:
   image_size: "416"
-  init_weights: "checkpoints/yolov3/yolov3.h5"
+  init_weights: "path/to/yolov3.h5"
 ```
 
 With the methods we have defined, visualizing the result is an easy work.

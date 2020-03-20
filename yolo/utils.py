@@ -1,16 +1,17 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import cv2
 import os
 
 
 def decode_yaml_tuple(tuple_str):
-    return np.array(list(map(lambda x: list(map(int, str.split(x, ','))), tuple_str.split())))
+    return np.array(list(map(lambda x: list(map(int, str.split(x, ","))), tuple_str.split())))
 
 
 def load_annotations(path):
     if not os.path.exists(path):
         raise KeyError("%s does not exist ... " % path)
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         annotations = f.readlines()
         annotations = [annotation.strip() for annotation in annotations if annotation]
 
@@ -21,7 +22,7 @@ def load_names(path):
     if not os.path.exists(path):
         raise KeyError("%s does not exist ... " % path)
     coco = {}
-    with open(path, 'rt') as file:
+    with open(path, "rt") as file:
         for index, label in enumerate(file):
             if label:
                 coco[index] = label.strip()
@@ -37,7 +38,7 @@ def parse_annotation(annotation, size):
         raise KeyError("%s does not exist ... " % image_path)
 
     image = cv2.imread(image_path)
-    bboxes = np.array([list(map(lambda x: int(float(x)), box.split(','))) for box in line[1:]])
+    bboxes = np.array([list(map(lambda x: int(float(x)), box.split(","))) for box in line[1:]])
 
     image, bboxes = preprocess_image(size, image, bboxes)
 
@@ -68,4 +69,3 @@ def preprocess_image(size, image_path, bboxes=None):
         bboxes[:, [1, 3]] = (bboxes[:, [1, 3]] * scale + dh) / ih
 
         return image_paded, bboxes
-

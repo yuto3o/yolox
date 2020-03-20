@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from tensorflow.keras.layers import Lambda, Conv2D, BatchNormalization, LeakyReLU, ZeroPadding2D, Add, Layer
 from tensorflow.keras.losses import binary_crossentropy
 from tensorflow.keras.regularizers import l2
@@ -9,15 +10,15 @@ LEAKY_ALPHA = 0.1
 
 
 def DarknetConv2D(*args, **kwargs):
-    darknet_conv_kwargs = {'kernel_regularizer': l2(WEIGHT_DECAY), 'padding': 'valid' if kwargs.get(
-        'strides') == (2, 2) else 'same'}
+    darknet_conv_kwargs = {"kernel_regularizer": l2(WEIGHT_DECAY), "padding": "valid" if kwargs.get(
+        "strides") == (2, 2) else "same"}
     darknet_conv_kwargs.update(kwargs)
 
     return Conv2D(*args, **darknet_conv_kwargs)
 
 
 def DarknetConv2D_BN_Leaky(*args, **kwargs):
-    without_bias_kwargs = {'use_bias': False}
+    without_bias_kwargs = {"use_bias": False}
     without_bias_kwargs.update(kwargs)
 
     def wrapper(x):

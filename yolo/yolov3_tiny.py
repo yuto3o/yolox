@@ -1,18 +1,19 @@
+# -*- coding: utf-8 -*-
 import tensorflow as tf
+
 from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import UpSampling2D, Concatenate, MaxPool2D
-
 from .yolov3_commom import Yolo_Boxes, Yolo_NMS, DarknetConv2D, DarknetConv2D_BN_Leaky
 
 
 def YoloV3_Tiny(cfg, is_training=False, name="yolov3_tiny"):
-    IOU_THRESHOLD = cfg['yolo']['iou_threshold']
-    SCORE_THRESHOLD = cfg['yolo']['score_threshold']
-    MAX_BOXES = cfg['yolo']['max_boxes']
-    NUM_CLASSES = cfg['yolo']['num_classes']
-    STRIDES = cfg['yolo']['strides']
-    MASK = cfg['yolo']['mask']
-    ANCHOR = cfg['yolo']['anchors']
+    IOU_THRESHOLD = cfg["yolo"]["iou_threshold"]
+    SCORE_THRESHOLD = cfg["yolo"]["score_threshold"]
+    MAX_BOXES = cfg["yolo"]["max_boxes"]
+    NUM_CLASSES = cfg["yolo"]["num_classes"]
+    STRIDES = cfg["yolo"]["strides"]
+    MASK = cfg["yolo"]["mask"]
+    ANCHOR = cfg["yolo"]["anchors"]
 
     tf.keras.backend.set_learning_phase(is_training)
 

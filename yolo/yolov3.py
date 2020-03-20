@@ -1,18 +1,19 @@
+# -*- coding: utf-8 -*-
 import tensorflow as tf
+
 from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import UpSampling2D, Concatenate
-
 from .yolov3_commom import Yolo_Boxes, Yolo_NMS, DarknetConv2D, DarknetConv2D_BN_Leaky, DarknetBlock
 
 
 def YoloV3(cfg, is_training=False, name="yolov3"):
-    IOU_THRESHOLD = cfg['yolo']['iou_threshold']
-    SCORE_THRESHOLD = cfg['yolo']['score_threshold']
-    MAX_BOXES = cfg['yolo']['max_boxes']
-    NUM_CLASSES = cfg['yolo']['num_classes']
-    STRIDES = cfg['yolo']['strides']
-    MASK = cfg['yolo']['mask']
-    ANCHOR = cfg['yolo']['anchors']
+    IOU_THRESHOLD = cfg["yolo"]["iou_threshold"]
+    SCORE_THRESHOLD = cfg["yolo"]["score_threshold"]
+    MAX_BOXES = cfg["yolo"]["max_boxes"]
+    NUM_CLASSES = cfg["yolo"]["num_classes"]
+    STRIDES = cfg["yolo"]["strides"]
+    MASK = cfg["yolo"]["mask"]
+    ANCHOR = cfg["yolo"]["anchors"]
 
     tf.keras.backend.set_learning_phase(is_training)
 
@@ -68,6 +69,7 @@ def YoloV3(cfg, is_training=False, name="yolov3"):
     output_2 = Yolo_Boxes(NUM_CLASSES, ANCHOR[MASK[2]], STRIDES[2], "yolo_boxes_2")(output_2)
 
     # boxes, scores, classes, valid_detections
-    outputs = Yolo_NMS(MAX_BOXES, IOU_THRESHOLD, SCORE_THRESHOLD, "yolo_nms")([output_0[:3], output_1[:3], output_2[:3]])
+    outputs = Yolo_NMS(MAX_BOXES, IOU_THRESHOLD, SCORE_THRESHOLD, "yolo_nms")(
+        [output_0[:3], output_1[:3], output_2[:3]])
 
     return Model(inputs, outputs, name=name)
