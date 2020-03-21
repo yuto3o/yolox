@@ -150,7 +150,9 @@ for img, box, score, cls, valid in zip(imgs, boxes, scores, classes, valid_detec
 
 ![dog](./disc/dog_ans.jpg)
 
+---
 
+## Others
 
-
+Old TF-Slim version is [here](https://github.com/yuto3o/yolov3-tensorflow/tree/slim)
 
