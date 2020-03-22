@@ -131,6 +131,7 @@ model.load_weights(cfg['test']['init_weights'])
 
 # define input
 ## image : RGB, float32
+## !!! please ensure the image size(w, h) is divisible by 64 separately.
 img = cv2.imread('./disc/dog.jpg')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 imgs = np.expand_dims(img / 255., 0).astype(np.float32)
