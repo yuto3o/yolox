@@ -23,6 +23,9 @@ def load(path):
 
         cfg["train"]["annotations"] = load_annotations(cfg["train"]["annot_path"])
         cfg["train"]["image_size"] = list(map(int, cfg["train"]["image_size"].split(",")))
+        cfg["train"]["lr_init"] = float(cfg["train"]["lr_init"])
+        cfg["train"]["lr_end"] = float(cfg["train"]["lr_end"])
+
         cfg["test"]["image_size"] = list(map(int, cfg["test"]["image_size"].split(",")))
 
     return cfg

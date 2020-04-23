@@ -145,7 +145,7 @@ class YoloParser:
             # print("Assign", a)
             b.set_weights(var_list[a])
 
-        self._model.save_weights(self._output_path)
+        self._model.save(self._output_path)
 
 
 def _read_file(path, split="="):

@@ -118,12 +118,12 @@ With the methods we have defined, visualizing the result is an easy work.
 import cv2
 import numpy as np
 
-from yolo import config
-from yolo.yolov3 import YoloV3
-from tools.paint import draw_bboxes
+from core import config
+from core.yolov3 import YoloV3
+from core.paint import draw_bboxes
 
 cfg = config.load('cfg/yolov3.yaml')
-names_list = cfg['yolo']['classes']
+names_list = cfg['core']['classes']
 
 model = YoloV3(cfg)
 model.summary()

@@ -2,14 +2,13 @@
 import cv2
 import os
 import time
-import tensorflow  as tf
+import tensorflow as tf
 
 from absl import app, flags, logging
-from yolo.yolov3 import YoloV3
-from yolo.yolov3_tiny import YoloV3_Tiny
-from yolo.utils import preprocess_image
-from yolo import config
-from tools.paint import draw_bboxes
+from core.yolov3 import YoloV3
+from core.yolov3_tiny import YoloV3_Tiny
+from core.utils import preprocess_image, draw_bboxes
+from core import config
 
 flags.DEFINE_string("config", None, "path to config file")
 flags.DEFINE_boolean("tiny", False, "yolov3 or yolov3-tiny")
@@ -22,6 +21,7 @@ FLAGS = flags.FLAGS
 
 
 def main(_argv):
+
     path = FLAGS.config
     if path and os.path.exists(path):
         cfg = config.load(path)
@@ -60,7 +60,7 @@ def main(_argv):
             time.sleep(0.1)
             continue
 
-        img = preprocess_image(FLAGS.size, img)
+        img = preprocess_image(img, FLAGS.size)
         img_in = tf.expand_dims(img, 0)
 
         t1 = time.time()
@@ -94,4 +94,3 @@ def main(_argv):
 
 if __name__ == "__main__":
     app.run(main)
-# python sensor.py --src=./mvi39311.mp4 --dst=./mvi3911_sensor.mp4 --config=./cfg/yolov3.yaml

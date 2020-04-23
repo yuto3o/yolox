@@ -2,30 +2,30 @@ yolo:
   iou_threshold: 0.45
   score_threshold: 0.3
   max_boxes: 100
-  classes: "./disc/coco.name"
+  classes: "./data/classes/coco.name"
   strides: "32,16"
 
   anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
   mask: "3,4,5 0,1,2"
 
 train:
-  annot_path: "./disc/annotation.txt"
+  annot_path: "./data/dataset/coco_trainval07+12.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
-  warmup_epoch: 5
+  warmup_epoch: 3
   lr_init: 5e-3
   lr_end: 1e-6
   batch_size: 1
-  num_epoch: 500
-  init_weight_path: "./checkpoints/yolov3_tiny/yolov3-tiny.h5"
+  num_epoch: 50
+  init_weight_path: "./checkpoints/tmp/yolov3/202004191250/variables/variables"
 
   ignore_threshold: 0.7
   save_weight_path: "./checkpoints"
 
 test:
+  annot_path: "./data/dataset/coco_test07+12.txt"
   image_size: "416"
-  init_weight_path: "./test.h5"
-
-# "./checkpoints/yolov3_tiny/yolov3-tiny.h5"
+  batch_size: 1
+  init_weight_path: "./checkpoints/tmp/yolov3/202004191250/variables/variables"
 
 
 

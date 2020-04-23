@@ -70,12 +70,11 @@ def _yolo_boxes(logits, num_classes, anchors, stride):
     x_shape = tf.shape(logits)
 
     logits = tf.reshape(logits, (x_shape[0], x_shape[1], x_shape[2], anchors.shape[0], num_classes + 5))
-    anchors = tf.cast(anchors, tf.float32)
 
     grid_shape = x_shape[1:3]
     grid_h, grid_w = grid_shape[0], grid_shape[1]
 
-    anchors /= tf.cast(tf.multiply([grid_w, grid_h], stride), tf.float32)
+    anchors = tf.cast(anchors, tf.float32) / tf.cast(tf.multiply([grid_w, grid_h], stride), tf.float32)
 
     box_xy, box_wh, obj, cls = tf.split(
         logits, (2, 2, 1, num_classes), axis=-1)
@@ -145,6 +144,9 @@ def Yolo_Loss(num_classes, anchors, stride, ignore_thresh):
 
         # 2. transform all true outputs
         # y_true: (batch_size, grid, grid, anchors, (x1, y1, x2, y2, obj, cls))
+        x_shape = tf.shape(y_pred)
+        y_true = tf.reshape(y_true, (x_shape[0], x_shape[1], x_shape[2], anchors.shape[0], num_classes + 5))
+
         true_box, true_obj, true_class = tf.split(y_true, (4, 1, num_classes), axis=-1)
         true_xy = (true_box[..., 0:2] + true_box[..., 2:4]) / 2
         true_wh = true_box[..., 2:4] - true_box[..., 0:2]
@@ -153,11 +155,12 @@ def Yolo_Loss(num_classes, anchors, stride, ignore_thresh):
         box_loss_scale = 2 - true_wh[..., 0] * true_wh[..., 1]
 
         # 3. inverting the pred box equations
-        grid_h, grid_w = tf.shape(y_true)[1:3]
+        grid_h, grid_w = x_shape[1], x_shape[2]
         grid = tf.meshgrid(tf.range(grid_w), tf.range(grid_h))
         grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)
         true_xy = true_xy * tf.cast([grid_w, grid_h], tf.float32) - tf.cast(grid, tf.float32)
-        true_wh = tf.math.log(true_wh / anchors)
+        true_wh = tf.math.log(
+            true_wh / (tf.cast(anchors, tf.float32) / tf.cast(tf.multiply([grid_w, grid_h], stride), tf.float32)))
         true_wh = tf.where(tf.math.is_inf(true_wh),
                            tf.zeros_like(true_wh), true_wh)
 
