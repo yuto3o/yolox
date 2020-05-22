@@ -50,7 +50,7 @@ path/to/image2 x1,y1,x2,y2,label
 ...
 ```
 
-Convert your data format firstly. We present a script for Pascal VOC in data/pascal_voc/voc_convert.py
+Convert your data format firstly. We present a script for Pascal VOC in https://github.com/yuto3o/yolox/blob/master/data/pascal_voc/voc_convert.py
 
 More details and a simple dataset could be got from https://github.com/YunYang1994/yymnist.
 
@@ -156,7 +156,7 @@ cv2.waitKey()
 
 We freeze backbone for first 30 epochs, and then finetune  all of the trainable variables for another 50 epochs. 
 
-| Name                    | Abb  |
+| Name                    | Abbr |
 | ----------------------- | ---- |
 | Standard Method         | SM   |
 | Dynamic mini batch size | DM   |
@@ -204,5 +204,5 @@ We freeze backbone for first 30 epochs, and then finetune  all of the trainable 
 
 ## 4. History
 
-- Slim version: https://github.com/yuto3o/yolov3-tensorflow/tree/slim
-- Tensorflow2.0-YOLOv3: https://github.com/yuto3o/yolov3-tensorflow/tree/yolov3-tf2
+- Slim version: https://github.com/yuto3o/yolox/tree/slim
+- Tensorflow2.0-YOLOv3: https://github.com/yuto3o/yolox/tree/yolov3-tf2
