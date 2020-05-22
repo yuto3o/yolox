@@ -117,6 +117,14 @@ A simple demo for YOLOv4
 ![yolov4](./misc/dog_v4.jpg)
 
 ```python
+from core.utils import decode_cfg, load_weights
+from core.model.one_stage.yolov4 import YoloV4
+from core.image import draw_bboxes, preprocess_image, preprocess_image_inv, read_image, Shader
+
+import numpy as np
+import cv2
+import time
+
 # read config
 cfg = decode_cfg("cfgs/coco_yolov4.yaml")
 
