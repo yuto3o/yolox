@@ -1,1 +1,0 @@
-python sensor.py --src=./mvi39311.mp4 --dst=./mvi3911_sensor.mp4 --config=./cfg/yolov3.yaml --tiny=false

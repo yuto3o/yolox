@@ -138,6 +138,15 @@ dmypy.json
 
 # pycharm
 .idea/
+venv/
 
-checkpoints/
+# jupyter
+.ipynb_checkpoints/
+
+# data
+ckpts/
+
+
+
+
 

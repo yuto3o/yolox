@@ -1,0 +1,39 @@
+yolo:
+  type: "yolov3"
+  iou_threshold: 0.45
+  score_threshold: 0.5
+  max_boxes: 300
+  strides: "32,16,8"
+  anchors: "10,13 16,30 33,23 30,61 62,45 59,119 116,90 156,198 373,326"
+  mask: "6,7,8 3,4,5 0,1,2"
+
+train:
+  label: "coco_yolov3"
+  name_path: "./data/coco/coco.name"
+  anno_path: "./data/pascal_voc/train.txt"
+  image_size: "320,352,384,416,448,480,512,544,576,608"
+
+  lr_base: 1e-3
+  t_max_epoch: 10
+  batch_size: 4
+  iter_size: 16
+  num_epoch: 300
+  init_weight_path: "./ckpts/yolov3.weights"
+
+  sample_rate: 5
+  save_weight_path: "./ckpts"
+
+  bbox_loss: "L2"
+
+  mix_up: false
+  cut_mix: false
+  mosaic: false
+  label_smoothing: True
+
+  ignore_threshold: 0.7
+
+test:
+  anno_path: "./data/pascal_voc/test.txt"
+  image_size: "416"
+  batch_size: 1
+  init_weight_path: ""

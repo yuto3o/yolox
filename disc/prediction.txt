@@ -1,1 +1,0 @@
-C:\Users\yuyang\Documents\codehub\yolov3\disc\dog.jpg 126,206,314,543,16,0.5 101,108,577,435,1,0.8 467,78,690,170,7,0.9

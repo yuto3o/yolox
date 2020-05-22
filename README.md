@@ -1,159 +1,208 @@
-# YOLOv3
+# More Than YOLO
 
-**YOLOv3 in TensorFlow(Keras)**
+TensorFlow & Keras Implementations & Python
 
-| Python | TensorFlow | OpenCV |
-| :----: | :--------: | :----: |
-| 3.7.6  |   2.0.0    | 3.4.2  |
+YOLOv3, YOLOv3-tiny, YOLOv4
 
-Refactor All the Codes
-- [x] **News**: TensorFlow 2.0 is available !
-- [x] **Script**: 
-  - [x] convert original yolov3.weight & yolov3.cfg to Keras style(hdf5).
-  - [x] convert frames to a video
-  - [x] not only image, but also video or web camera
-- [x] **Core Components**:
-  - [x] more easy api for inference
-  - [x] reconstruct this project
-- [ ] **Training**: Next Step.
-  - [x] loss function is added (not test)
-  - [x] simple data pipeline is available.
+YOLOv4-tiny(unofficial)
+
+**requirements:** TensorFlow 2.x (not test on 1.x), OpenCV, Numpy, PyYAML
+
+---
+
+This repository have done:
+
+- [x] Backbone for YOLO (YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny[unofficial])
+- [x] YOLOv3 Head
+- [x] Keras Callbacks for Online Evaluation
+- [x] Load Official Weight File
+- [x] K-Means for Anchors
+- [x] Training Script (Strategy and Model Config)
+  - Define simple training in [train.py](./train.py)
+  - Use YAML as config file in [cfgs](./cfgs)
+- [ ] Data Augmentation
+  - [x] Standard Method: Random Flip, Random Crop, Zoom, Random Grayscale, Random Distort
+  - [x] Hight Level: Cut Mix, Mix Up, Mosaic
+  - [ ] More, I can be so much more ... 
+- [ ] For Loss
+  - [x] Label Smoothing
+  - [x] Focal Loss
+  - [x] L2, D-IoU, G-IoU, C-IoU
   - [ ] ...
 
 ---
 
-## Script
+[toc]
 
-### From yolov3.weights to yolov3.h5
-Download yolov3.weight and yolov3.cfg from the [Homepage](https://pjreddie.com/darknet/yolo/).
+## 0. Read Source Code for More Details
 
-Run the below command (you need TensorFlow, Numpy and Python only).
+You can get official weight files from https://github.com/AlexeyAB/darknet/releases or https://pjreddie.com/darknet/yolo/.
 
-```shell script
-python convert.py --config=path/to/yolov3.cfg --weights=path/to/yolov3.cfg --output=path/to/yolov3.h5 
+## 1. Samples
 
-or
+### 1.1 Data File
 
-python convert.py --tiny --config=path/to/yolov3-tiny.cfg --weights=path/to/yolov3-tiny.cfg --output=path/to/yolov3-tiny.h5 
+We use a special data format like that,
+
+```txt
+path/to/image1 x1,y1,x2,y2,label x1,y1,x2,y2,label 
+path/to/image2 x1,y1,x2,y2,label 
+...
 ```
 
-```shell script
-Reading .cfg file ...
-Converting ...
-From path/to/yolov3.weights
-To   path/to/yolov3.h5
-Encode weights...
-Weights Header:  0 2 0 [32013312]
-Success!
-Model Parameters:
-Finish !
+Convert your data format firstly. We present a script for Pascal VOC in data/pascal_voc/voc_convert.py
 
-or
+More details and a simple dataset could be got from https://github.com/YunYang1994/yymnist.
 
-Reading .cfg file ...
-Converting ...
-From path/to/yolov3-tiny.weights
-To   path/to/yolov3-tiny.h5
-Encode weights...
-Weights Header:  0 2 0 [32013312]
-Success!
-Model Parameters:
-Finish !
-```
+### 1.2 Configure 
 
-### From frame to video
-XVID for MP4
-```shell script
-python pic2vid.py --src=path/to/frames --dst=path/to/video --fps=25 --format=XVID
-```
-
-### Scan a video or a web camera 
-
-```shell script
-python sensor.py --src=path/to/video(or device id) --dst=path/to/output --config=path/to/yolov3.config --tiny=False
-
-or
-
-python sensor.py --src=path/to/video(or device id) --dst=path/to/output --config=path/to/yolov3-tiny.config --tiny=True
-```
-![street](./disc/street.png)
-
----
-
-## Core 
-
-All of the hyper parameters about YoloV3 are defined in /yolov3/cfg
 ```yaml
-# yolov3.yaml
+# voc_yolov3_tiny.yaml
 yolo:
+  type: "yolov3_tiny" # must be 'yolov3', 'yolov3_tiny', 'yolov4', 'yolov4_tiny'.
   iou_threshold: 0.45
-  score_threshold: 0.3
+  score_threshold: 0.5
   max_boxes: 100
-  classes: "./disc/coco.name"
-  strides: "32,16,8"
-
-  anchors: "10,13 16,30 33,23 30,61 62,45 59,119 116,90 156,198 373,326"
-  mask: "6,7,8 3,4,5 0,1,2"
+  strides: "32,16"
+  anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
+  mask: "3,4,5 0,1,2"
 
 train:
-  annot_path: "disc/annotation.txt"
-  image_size: "320,352,384,416,448,480,512,544,576,608"
-  warmup_epoch: 2
-  lr_init: 5e-3
-  lr_end: 1e-6
-  batch_size: 1
-  num_epoch: 40
-  init_weights: ""
+  label: "voc_yolov3_tiny" # any thing you like
+  name_path: "./data/pascal_voc/voc.name"
+  anno_path: "./data/pascal_voc/train.txt"
+  # "416" for single mini batch size, "352,384,416,448,480" for Dynamic mini batch size.
+  image_size: "416" 
 
-  ignore_threshold: 0.7
+  batch_size: 4
+  # if you want to load .weights file, you should use something like coco.yaml.
+  init_weight_path: "./ckpts/yolov3-tiny.h5"
+  sample_rate: 5 # eval for every 5 epochs
+  save_weight_path: "./ckpts"
+
+  # Must be "L2", "CIou", "GIou", "CIou" or something like "L2+FL" for focal loss
+  loss_type: "L2" 
+  
+  # turn on hight level data augmentation
+  mix_up: false
+  cut_mix: false
+  mosaic: false
+  label_smoothing: false
+
+  ignore_threshold: 0.5
 
 test:
-  image_size: "416"
-  init_weights: "path/to/yolov3.h5"
+  anno_path: "./data/pascal_voc/test.txt"
+  image_size: "416" # image size for test
+  batch_size: 1
+  init_weight_path: ""
 ```
 
-With the methods we have defined, visualizing the result is an easy work.
+### 1.3 K-Means
+
+Edit the kmeans.py as you like
 
 ```python
-import cv2
-import numpy as np
-
-from core import config
-from core.yolov3 import YoloV3
-from core.paint import draw_bboxes
-
-cfg = config.load('cfg/yolov3.yaml')
-names_list = cfg['core']['classes']
-
-model = YoloV3(cfg)
-model.summary()
-model.load_weights(cfg['test']['init_weights'])
-
-# define input
-## image : RGB, float32
-## !!! please ensure the image size(w, h) is divisible by 64 separately.
-img = cv2.imread('./disc/dog.jpg')
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-imgs = np.expand_dims(img / 255., 0).astype(np.float32)
-
-boxes, scores, classes, valid_detections = model.predict(imgs)
-
-for img, box, score, cls, valid in zip(imgs, boxes, scores, classes, valid_detections):
-    valid_boxes = box[:valid]
-    valid_score = score[:valid]
-    valid_cls = cls[:valid]
-
-    img = draw_bboxes(img, valid_boxes, valid_score, valid_cls, names_list)
-
-    cv2.imshow('img', img)
-    cv2.waitKey()
+# kmeans.py
+# Key Parameters
+K = 6 # num of clusters
+image_size = 416
+dataset_path = './data/pascal_voc/train.txt'
 ```
 
-![dog](./disc/dog_ans.jpg)
+### 1.4 Inference
 
----
+A simple demo for YOLOv4
 
-## Others
+![yolov4](./misc/dog_v4.jpg)
 
-Old TF-Slim version is [here](https://github.com/yuto3o/yolov3-tensorflow/tree/slim)
+```python
+# read config
+cfg = decode_cfg("cfgs/coco_yolov4.yaml")
 
+model, eval_model = YoloV4(cfg)
+eval_model.summary()
+
+# assign colors for difference labels
+names = cfg["train"]["names"]
+shader = Shader(len(names))
+
+# load weights
+load_weights(model, cfg["test"]["init_weight_path"])
+
+img_raw = read_image(r'./misc/dog.jpg')
+img = preprocess_image(img_raw, (512, 512))
+imgs = img[np.newaxis, ...]
+
+tic = time.time()
+boxes, scores, classes, valid_detections = eval_model.predict(imgs)
+print(time.time() - tic, 's')
+
+# for single image, batch size is 1
+valid_boxes = boxes[0][:valid_detections[0]]
+valid_score = scores[0][:valid_detections[0]]
+valid_cls = classes[0][:valid_detections[0]]
+
+valid_boxes *= 512
+img, valid_boxes = preprocess_image_inv(img, img_raw.shape[1::-1], valid_boxes)
+img = draw_bboxes(img, valid_boxes, valid_score, valid_cls, names, shader)
+
+cv2.imshow('img', img[..., ::-1])
+cv2.imwrite('./misc/dog_v4.jpg', img)
+cv2.waitKey()
+```
+
+## 2. Experiment
+
+We freeze backbone for first 30 epochs, and then finetune  all of the trainable variables for another 50 epochs. 
+
+| Name                    | Abb  |
+| ----------------------- | ---- |
+| Standard Method         | SM   |
+| Dynamic mini batch size | DM   |
+| Label Smoothing         | LS   |
+| Focal Loss              | FL   |
+| Mix Up                  | MU   |
+| Cut Mix                 | CM   |
+| Mosaic                  | M    |
+
+**YOLOv3-tiny**
+
+| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
+|      |      |      |      |      |      |      | L2   | 18.5 | 44.9   | 10.4   |
+| ✔    |      |      |      |      |      |      | L2   | 22.0 | 49.1   | 15.2   |
+| ✔    | ✔    |      |      |      |      |      | L2   |      |        |        |
+| ✔    | ✔    | ✔    |      |      |      |      | L2   |      |        |        |
+| ✔    | ✔    | ✔    |      |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+
+
+
+**YOLOv4-tiny**
+
+| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
+|      |      |      |      |      |      |      | L2   |      |        |        |
+| ✔    |      |      |      |      |      |      | L2   |      |        |        |
+| ✔    | ✔    |      |      |      |      |      | L2   |      |        |        |
+| ✔    | ✔    | ✔    |      |      |      |      | L2   |      |        |        |
+| ✔    | ✔    | ✔    |      |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+
+## 3. Reference
+
+- https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3
+- https://github.com/hunglc007/tensorflow-yolov4-tflite
+- https://github.com/experiencor/keras-yolo3
+
+## 4. History
+
+- Slim version: https://github.com/yuto3o/yolov3-tensorflow/tree/slim
+- Tensorflow2.0-YOLOv3: https://github.com/yuto3o/yolov3-tensorflow/tree/yolov3-tf2
