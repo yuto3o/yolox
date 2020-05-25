@@ -174,13 +174,15 @@ We freeze backbone for first 30 epochs, and then finetune  all of the trainable 
 | Cut Mix                 | CM   |
 | Mosaic                  | M    |
 
+Standard Method Package includes: Flip left and right,  Crop and Zoom(jitter=0.3), Grayscale, Distort, Rotate(angle=7).
+
 **YOLOv3-tiny**
 
 | SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
 |      |      |      |      |      |      |      | L2   | 18.5 | 44.9   | 10.4   |
 | ✔    |      |      |      |      |      |      | L2   | 22.0 | 49.1   | 15.2   |
-| ✔    | ✔    |      |      |      |      |      | L2   |      |        |        |
+| ✔    | ✔    |      |      |      |      |      | L2   | 21.6 | 47.3   | 15.4   |
 | ✔    | ✔    | ✔    |      |      |      |      | L2   |      |        |        |
 | ✔    | ✔    | ✔    |      |      |      |      | CIoU |      |        |        |
 | ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |

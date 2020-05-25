@@ -24,7 +24,7 @@ train:
   mix_up: false
   cut_mix: false
   mosaic: false
-  label_smoothing: false
+  label_smoothing: True
 
   ignore_threshold: 0.5
 

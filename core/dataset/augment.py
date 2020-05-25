@@ -5,8 +5,8 @@ import cv2
 def mosic(image, bboxes, labels,
           image2, bboxes2, labels2,
           image3, bboxes3, labels3,
-          image4, bboxes4, labels4):
-    min_offset = 0.2
+          image4, bboxes4, labels4,
+          min_offset=0.2):
 
     h, w = image.shape[0], image.shape[1]
 
@@ -99,11 +99,12 @@ def cut_mix(image, bboxes, labels, image2, bboxes2, labels2, beta=1):
     return mix_img, mix_bboxes, mix_labels, mix_weights
 
 
-def mix_up(image, bboxes, labels, image2, bboxes2, labels2, beta=1):
-    # beta(a=1, b=1) = uniform(0, 1)
-    # lambd = np.random.beta(beta, beta)
-    # Yolo use fixed 0.5
-    lambd = 0.5
+def mix_up(image, bboxes, labels, image2, bboxes2, labels2, alpha=None, beta=None):
+    if alpha is None or beta is None:
+        # Yolo use fixed 0.5
+        lambd = 0.5
+    else:
+        lambd = np.random.beta(beta, beta)
 
     H = max(image.shape[0], image2.shape[0])
     W = max(image.shape[1], image2.shape[1])
@@ -215,3 +216,34 @@ def random_distort(image, hue=18, saturation=1.5, exposure=1.5):
 
     # convert back to RGB from HSV
     return cv2.cvtColor(image.astype('uint8'), cv2.COLOR_HSV2RGB)
+
+
+def random_rotate(image, bboxes, angle=7.):
+    angle = np.random.uniform(-angle, angle)
+
+    h, w, _ = image.shape
+    m = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1)
+    image = cv2.warpAffine(image, m, (w, h))
+
+    top_left = bboxes[..., [0, 1]]
+    top_right = bboxes[..., [2, 1]]
+    bottom_left = bboxes[..., [0, 3]]
+    bottom_right = bboxes[..., [2, 3]]
+
+    # N, 4, 2
+    points = np.stack([top_left, top_right, bottom_left, bottom_right], axis=-2)
+    points_3d = np.ones(points.shape[:-1] + (3,), np.float32)
+    points_3d[..., :2] = points
+
+    # points = m @ points_3d[0].T
+    points = map(lambda x: m @ x.T, points_3d)
+    points = np.array(list(points))
+    points = np.transpose(points, [0, 2, 1])
+
+    bboxes[..., 0] = np.maximum(np.min(points[..., 0], axis=-1), 0.)
+    bboxes[..., 1] = np.maximum(np.min(points[..., 1], axis=-1), 0.)
+    bboxes[..., 2] = np.minimum(np.max(points[..., 0], axis=-1), w)
+    bboxes[..., 3] = np.minimum(np.max(points[..., 1], axis=-1), h)
+
+
+    return image, bboxes
