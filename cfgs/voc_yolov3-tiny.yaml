@@ -14,7 +14,7 @@ train:
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
   batch_size: 4
-  init_weight_path: "./ckpts/yolov3-tiny.h5"
+  init_weight_path: "./ckpts/tmp/voc_yolov3_tiny_SM_DM/202005250853/mAP-0.2074.h5" #"./ckpts/yolov3-tiny.h5"
 
   sample_rate: 5
   save_weight_path: "./ckpts"

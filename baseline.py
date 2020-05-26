@@ -57,23 +57,38 @@ def main(_argv):
     ]
 
 
-    num = 29
-    for i in range(num): model.layers[i].trainable = False
-    print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
+    # num = 29
+    # for i in range(num): model.layers[i].trainable = False
+    # print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
+    #
+    # model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-4), run_eagerly=False)
+    # model.fit(train_dataset,
+    #           steps_per_epoch=len(train_dataset),
+    #           epochs=30,
+    #           callbacks=callback
+    #           )
+    #
+    # for i in range(len(model.layers)): model.layers[i].trainable = True
+    #
+    # model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-5), run_eagerly=False)
+    # model.fit(train_dataset,
+    #           steps_per_epoch=len(train_dataset),
+    #           epochs=50,
+    #           callbacks=callback
+    #           )
 
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-4), run_eagerly=False)
+    callback = [
+        COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
+                           eval_model=eval_model,
+                           model_cfg=cfg,
+                           sample_rate=1,
+                           verbose=1),
+    ]
+
+    model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-6), run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
-              epochs=30,
-              callbacks=callback
-              )
-
-    for i in range(len(model.layers)): model.layers[i].trainable = True
-
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-5), run_eagerly=False)
-    model.fit(train_dataset,
-              steps_per_epoch=len(train_dataset),
-              epochs=51,
+              epochs=10,
               callbacks=callback
               )
 

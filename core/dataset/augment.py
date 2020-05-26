@@ -7,7 +7,6 @@ def mosic(image, bboxes, labels,
           image3, bboxes3, labels3,
           image4, bboxes4, labels4,
           min_offset=0.2):
-
     h, w = image.shape[0], image.shape[1]
 
     mix_img = np.zeros(shape=(h, w, 3), dtype='uint8')
@@ -134,50 +133,6 @@ def onehot(labels, num_classes, smoothing):
     return labels
 
 
-def random_flip_lr(image, bboxes):
-    if np.random.randint(2):
-        h, w, _ = image.shape
-        image = image[:, ::-1, :]
-        bboxes[:, [0, 2]] = w - bboxes[:, [2, 0]]
-
-    return image, bboxes
-
-
-def random_crop_and_zoom(image, bboxes, size, jitter=0.3):
-    net_w, net_h = size
-    h, w, _ = image.shape
-    dw = w * jitter
-    dh = h * jitter
-
-    rate = (w + np.random.uniform(-dw, dw)) / (h + np.random.uniform(-dh, dh))
-    scale = np.random.uniform(1 / 1.5, 1.5)
-
-    if (rate < 1):
-        new_h = int(scale * net_h)
-        new_w = int(new_h * rate)
-    else:
-        new_w = int(scale * net_w)
-        new_h = int(new_w / rate)
-
-    dx = int(np.random.uniform(0, net_w - new_w))
-    dy = int(np.random.uniform(0, net_h - new_h))
-
-    M = np.array([[new_w / w, 0., dx],
-                  [0., new_h / h, dy]], dtype=np.float32)
-    image = cv2.warpAffine(image, M, size, borderValue=(127, 127, 127))
-
-    bboxes[:, [0, 2]] = bboxes[:, [0, 2]] * new_w / w + dx
-    bboxes[:, [1, 3]] = bboxes[:, [1, 3]] * new_h / h + dy
-
-    bboxes[:, [0, 2]] = np.clip(bboxes[:, [0, 2]], 0, net_w)
-    bboxes[:, [1, 3]] = np.clip(bboxes[:, [1, 3]], 0, net_h)
-
-    filter_b = np.logical_or(bboxes[:, 0] >= bboxes[:, 2], bboxes[:, 1] >= bboxes[:, 3])
-    bboxes = bboxes[~filter_b]
-
-    return image, bboxes
-
-
 def random_grayscale(image, alpha=(0.0, 1.0)):
     alpha = alpha[0] + np.random.uniform() * (alpha[1] - alpha[0])
 
@@ -223,7 +178,7 @@ def random_rotate(image, bboxes, angle=7.):
 
     h, w, _ = image.shape
     m = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1)
-    image = cv2.warpAffine(image, m, (w, h))
+    image = cv2.warpAffine(image, m, (w, h), borderValue=(127, 127, 127))
 
     top_left = bboxes[..., [0, 1]]
     top_right = bboxes[..., [2, 1]]
@@ -240,10 +195,57 @@ def random_rotate(image, bboxes, angle=7.):
     points = np.array(list(points))
     points = np.transpose(points, [0, 2, 1])
 
-    bboxes[..., 0] = np.maximum(np.min(points[..., 0], axis=-1), 0.)
-    bboxes[..., 1] = np.maximum(np.min(points[..., 1], axis=-1), 0.)
-    bboxes[..., 2] = np.minimum(np.max(points[..., 0], axis=-1), w)
-    bboxes[..., 3] = np.minimum(np.max(points[..., 1], axis=-1), h)
+    bboxes[..., 0] = np.min(points[..., 0], axis=-1)
+    bboxes[..., 1] = np.min(points[..., 1], axis=-1)
+    bboxes[..., 2] = np.max(points[..., 0], axis=-1)
+    bboxes[..., 3] = np.max(points[..., 1], axis=-1)
 
+    bboxes[:, [0, 2]] = np.clip(bboxes[:, [0, 2]], 0, w)
+    bboxes[:, [1, 3]] = np.clip(bboxes[:, [1, 3]], 0, h)
 
     return image, bboxes
+
+
+def random_flip_lr(image, bboxes):
+    if np.random.randint(2):
+        h, w, _ = image.shape
+        image = image[:, ::-1, :]
+        bboxes[:, [0, 2]] = w - bboxes[:, [2, 0]]
+
+    return image, bboxes
+
+
+def random_crop_and_zoom(image, bboxes, labels, size, jitter=0.3):
+    net_w, net_h = size
+    h, w, _ = image.shape
+    dw = w * jitter
+    dh = h * jitter
+
+    rate = (w + np.random.uniform(-dw, dw)) / (h + np.random.uniform(-dh, dh))
+    scale = np.random.uniform(1 / 1.5, 1.5)
+
+    if (rate < 1):
+        new_h = int(scale * net_h)
+        new_w = int(new_h * rate)
+    else:
+        new_w = int(scale * net_w)
+        new_h = int(new_w / rate)
+
+    dx = int(np.random.uniform(0, net_w - new_w))
+    dy = int(np.random.uniform(0, net_h - new_h))
+
+    M = np.array([[new_w / w, 0., dx],
+                  [0., new_h / h, dy]], dtype=np.float32)
+    image = cv2.warpAffine(image, M, size, borderValue=(127, 127, 127))
+
+    bboxes[:, [0, 2]] = bboxes[:, [0, 2]] * new_w / w + dx
+    bboxes[:, [1, 3]] = bboxes[:, [1, 3]] * new_h / h + dy
+
+    bboxes[:, [0, 2]] = np.clip(bboxes[:, [0, 2]], 0, net_w)
+    bboxes[:, [1, 3]] = np.clip(bboxes[:, [1, 3]], 0, net_h)
+
+    filter_b = np.logical_or(bboxes[:, 0] >= bboxes[:, 2], bboxes[:, 1] >= bboxes[:, 3])
+    bboxes = bboxes[~filter_b]
+    labels = labels[~filter_b]
+
+    return image, bboxes, labels

@@ -103,9 +103,10 @@ class Dataset(Sequence):
         image = augment.random_distort(image)
         image = augment.random_grayscale(image)
         image, bboxes = augment.random_flip_lr(image, bboxes)
-        image, bboxes = augment.random_crop_and_zoom(image, bboxes, (self._image_size, self._image_size))
         image, bboxes = augment.random_rotate(image, bboxes)
-        image, bboxes = preprocess_image(image, (self._image_size, self._image_size), bboxes)
+        image, bboxes, labels = augment.random_crop_and_zoom(image, bboxes, labels, (self._image_size, self._image_size))
+
+        #image, bboxes = preprocess_image(image, (self._image_size, self._image_size), bboxes)
 
         labels = augment.onehot(labels, self.num_classes, self.label_smoothing)
 
