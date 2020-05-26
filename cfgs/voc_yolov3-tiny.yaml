@@ -8,23 +8,21 @@ yolo:
   mask: "3,4,5 0,1,2"
 
 train:
-  label: "voc_yolov3_tiny_SM_DM"
+  label: "voc_yolov3_tiny_SM_DM_CIoU"
   name_path: "./data/pascal_voc/voc.name"
   anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
   batch_size: 4
-  init_weight_path: "./ckpts/tmp/voc_yolov3_tiny_SM_DM/202005250853/mAP-0.2074.h5" #"./ckpts/yolov3-tiny.h5"
-
-  sample_rate: 5
+  init_weight_path: "./ckpts/yolov3-tiny.h5"
   save_weight_path: "./ckpts"
 
-  loss_type: "L2"
+  loss_type: "CIoU"
 
   mix_up: false
   cut_mix: false
   mosaic: false
-  label_smoothing: True
+  label_smoothing: false
 
   ignore_threshold: 0.5
 

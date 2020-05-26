@@ -114,7 +114,7 @@ class _COCOeval:
         :return: None
         '''
         tic = time.time()
-        print('Running per image evaluation...')
+        print('\nRunning per image evaluation...')
         p = self.params
 
         self._prepare()

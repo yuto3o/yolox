@@ -127,8 +127,8 @@ def onehot(labels, num_classes, smoothing):
 
     if smoothing:
         uniform_distribution = np.full(num_classes, 1.0 / num_classes)
-        delta = 0.01
-        labels = labels * (1 - delta) + delta * uniform_distribution
+        delta = 0.1
+        labels = labels * (1 - delta) + uniform_distribution * delta
 
     return labels
 

@@ -21,7 +21,7 @@ This repository have done:
   - Define simple training in [train.py](./train.py)
   - Use YAML as config file in [cfgs](./cfgs)
 - [ ] Data Augmentation
-  - [x] Standard Method: Random Flip, Random Crop, Zoom, Random Grayscale, Random Distort
+  - [x] Standard Method: Random Flip, Random Crop, Zoom, Random Grayscale, Random Distort, Rotate
   - [x] Hight Level: Cut Mix, Mix Up, Mosaic
   - [ ] More, I can be so much more ... 
 - [ ] For Loss
@@ -77,7 +77,6 @@ train:
   batch_size: 4
   # if you want to load .weights file, you should use something like coco.yaml.
   init_weight_path: "./ckpts/yolov3-tiny.h5"
-  sample_rate: 5 # eval for every 5 epochs
   save_weight_path: "./ckpts"
 
   # Must be "L2", "CIou", "GIou", "CIou" or something like "L2+FL" for focal loss
@@ -162,7 +161,7 @@ cv2.waitKey()
 
 ## 2. Experiment
 
-We freeze backbone for first 30 epochs, and then finetune  all of the trainable variables for another 50 epochs. 
+We freeze backbone for first 30 epochs(lr=1e-4), and then finetune  all of the trainable variables for another 50 epochs(lr=1e-5), and final10 epochs for evaluation(lr=1e-6).
 
 | Name                    | Abbr |
 | ----------------------- | ---- |
@@ -174,25 +173,25 @@ We freeze backbone for first 30 epochs, and then finetune  all of the trainable 
 | Cut Mix                 | CM   |
 | Mosaic                  | M    |
 
-Standard Method Package includes: Flip left and right,  Crop and Zoom(jitter=0.3), Grayscale, Distort, Rotate(angle=7).
+Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3), Grayscale, Distort, Rotate(angle=7).
 
-**YOLOv3-tiny**
+**YOLOv3-tiny**(Pretrained on COCO)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP   | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ------ | ------ |
-|      |      |      |      |      |      |      | L2   | 18.5  | 44.9   | 10.4   |
-| ✔    |      |      |      |      |      |      | L2   | 22.0  | 49.1   | 15.2   |
-| ✔    | ✔    |      |      |      |      |      | L2   | 21.6  | 47.3   | 15.4   |
-| ✔    | ✔    | ✔    |      |      |      |      | L2   | 20.74 | 47.1   | 14.5   |
-| ✔    | ✔    | ✔    |      |      |      |      | CIoU |       |        |        |
-| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |       |        |        |
-| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |       |        |        |
-| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |       |        |        |
-| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |       |        |        |
+| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
+|      |      |      |      |      |      |      | L2   | 18.5 | 44.9   | 10.4   |
+| ✔    |      |      |      |      |      |      | L2   | 22.0 | 49.1   | 15.2   |
+| ✔    | ✔    |      |      |      |      |      | L2   | 22.8 | 49.8   | 16.3   |
+| ✔    | ✔    | ✔    |      |      |      |      | L2   | 21.9 | 48.5   | 15.4   |
+| ✔    | ✔    |      |      |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    |      | ✔    |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    |      | ✔    | ✔    |      |      | CIoU |      |        |        |
+| ✔    | ✔    |      | ✔    |      | ✔    |      | CIoU |      |        |        |
+| ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU |      |        |        |
 
+Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
 
-
-**YOLOv4-tiny**
+**YOLOv4-tiny**(TODO; Train from Scratch)
 
 | SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |

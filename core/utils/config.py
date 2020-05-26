@@ -1,6 +1,7 @@
 import yaml
 import os
 import numpy as np
+import pprint
 
 from core.utils import decode_name
 
@@ -27,5 +28,7 @@ def decode_cfg(path):
 
         cfg['test']['image_size'] = list(map(int, cfg['test']['image_size'].split(',')))
         cfg['yolo']['num_classes'] = len(cfg['train']['names'])
+
+        pprint.pprint(cfg)
 
     return cfg
