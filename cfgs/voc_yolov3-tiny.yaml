@@ -8,7 +8,7 @@ yolo:
   mask: "3,4,5 0,1,2"
 
 train:
-  label: "voc_yolov3_tiny_SM_DM_CIoU"
+  label: "voc_yolov3_tiny_SM_DM_CIoU_FL"
   name_path: "./data/pascal_voc/voc.name"
   anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
@@ -17,12 +17,13 @@ train:
   init_weight_path: "./ckpts/yolov3-tiny.h5"
   save_weight_path: "./ckpts"
 
-  loss_type: "CIoU"
+  loss_type: "CIoU+FL"
 
   mix_up: false
   cut_mix: false
   mosaic: false
   label_smoothing: false
+  normal_method: true
 
   ignore_threshold: 0.5
 

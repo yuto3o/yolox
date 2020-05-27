@@ -247,71 +247,6 @@ class YoloHeader(tf.keras.layers.Layer):
                 [input_shape[0][0]])
 
 
-# def YoloLoss(anchors, stride, num_classes, ignore_thresh, bbox_loss):
-#     def wrapper(y_true, y_pred):
-#         # 0. default
-#         dtype = y_pred.dtype
-#         y_shape = tf.shape(y_pred)
-#         grid_w, grid_h = y_shape[2], y_shape[1]
-#         anchors_tensor = tf.cast(anchors, dtype) / tf.cast(tf.multiply([grid_w, grid_h], stride), dtype)
-#         y_true = tf.reshape(y_true, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 6))
-#         y_pred = tf.reshape(y_pred, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 5))
-#
-#         # 1. transform all pred outputs
-#         # y_pred: (batch_size, grid, grid, anchors, (x, y, w, h, obj, ...cls))
-#         pred_box, pred_obj, pred_class, pred_xywh = _yolo_boxes(
-#             y_pred, num_classes, anchors_tensor)
-#         pred_xy = pred_xywh[..., 0:2]
-#         pred_wh = pred_xywh[..., 2:4]
-#
-#         # 2. transform all true outputs
-#         # y_true: (batch_size, grid, grid, anchors, (x1, y1, x2, y2, obj, cls))
-#         true_box, true_obj, true_weight, true_class = tf.split(y_true, (4, 1, 1, num_classes), axis=-1)
-#         true_xy = (true_box[..., 0:2] + true_box[..., 2:4]) / 2
-#         true_wh = true_box[..., 2:4] - true_box[..., 0:2]
-#
-#         # give higher weights to small boxes
-#         box_loss_scale = 2 - true_wh[..., 0] * true_wh[..., 1]
-#
-#         # 3. inverting the pred box equations
-#         grid_size = tf.shape(y_true)[1]
-#         grid = tf.meshgrid(tf.range(grid_size), tf.range(grid_size))
-#         grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)
-#         true_xy = true_xy * tf.cast(grid_size, dtype) - tf.cast(grid, dtype)
-#         true_wh = tf.math.log(true_wh / anchors_tensor)
-#         true_wh = tf.where(tf.math.is_inf(true_wh),
-#                            tf.zeros_like(true_wh), true_wh)
-#
-#         # 4. calculate all masks
-#         obj_mask = tf.squeeze(true_obj, -1)
-#         weight = tf.squeeze(true_weight, -1)
-#         # ignore false positive when iou is over threshold
-#         best_iou = tf.map_fn(
-#             lambda x: tf.reduce_max(_broadcast_iou(x[0], tf.boolean_mask(
-#                 x[1], tf.cast(x[2], tf.bool))), axis=-1),
-#             (pred_box, true_box, obj_mask),
-#             dtype)
-#         ignore_mask = tf.cast(best_iou < ignore_thresh, dtype)
-#
-#         # 5. calculate all losses
-#         xy_loss = obj_mask * box_loss_scale * 0.5 * tf.reduce_sum(tf.square(true_xy - pred_xy), axis=-1)
-#         wh_loss = obj_mask * box_loss_scale * 0.5 * tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)
-#         obj_loss = tf.keras.losses.binary_crossentropy(true_obj, pred_obj)
-#         obj_loss = obj_mask * obj_loss + (1 - obj_mask) * ignore_mask * obj_loss
-#         # TODO: use binary_crossentropy instead
-#         class_loss = obj_mask * tf.keras.losses.categorical_crossentropy(true_class, pred_class)
-#
-#         # 6. sum over (batch, gridx, gridy, anchors) => (batch, 1)
-#         xy_loss = tf.reduce_sum(weight * xy_loss, axis=(1, 2, 3))
-#         wh_loss = tf.reduce_sum(weight * wh_loss, axis=(1, 2, 3))
-#         obj_loss = tf.reduce_sum(weight * obj_loss, axis=(1, 2, 3))
-#         class_loss = tf.reduce_sum(weight * class_loss, axis=(1, 2, 3))
-#
-#         return xy_loss + wh_loss + obj_loss + class_loss
-#
-#     return wrapper
-
-
 def _broadcast_iou(box_1, box_2):
     # box_1: (..., (x1, y1, x2, y2))
     # box_2: (N, (x1, y1, x2, y2))
@@ -429,7 +364,7 @@ def YoloLoss(anchors, stride, num_classes, ignore_thresh, type):
         cls_loss = obj_mask * tf.keras.losses.binary_crossentropy(true_cls, pred_cls)
 
         def _focal_loss(y_true, y_pred, alpha=1, gamma=2):
-            focal_loss = alpha * tf.pow(tf.abs(y_true - y_pred), gamma)
+            focal_loss = tf.squeeze(alpha * tf.pow(tf.abs(y_true - y_pred), gamma), axis=-1)
             return focal_loss
 
         if 'FL' in type:

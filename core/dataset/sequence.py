@@ -22,6 +22,8 @@ class Dataset(Sequence):
         self.name_path = cfg['train']['name_path']
         self.image_size = cfg["train"]["image_size"]
         self.batch_size = cfg["train"]["batch_size"]
+
+        self.normal_method = cfg['train']["normal_method"]
         self.mix_up = cfg['train']["mix_up"]
         self.cut_mix = cfg['train']['cut_mix']
         self.mosaic = cfg['train']['mosaic']
@@ -82,8 +84,6 @@ class Dataset(Sequence):
                                                                image3, bboxes3, labels3,
                                                                image4, bboxes4, labels4)
 
-
-
             bboxes = np.divide(bboxes, self._image_size)
             bboxes[..., [0, 2]] = np.clip(bboxes[..., [0, 2]], 0., 1.)
             bboxes[..., [1, 3]] = np.clip(bboxes[..., [1, 3]], 0., 1.)
@@ -100,13 +100,17 @@ class Dataset(Sequence):
         image = read_image(path)
         bboxes, labels = np.array(bboxes), np.array(labels)
 
-        image = augment.random_distort(image)
-        image = augment.random_grayscale(image)
-        image, bboxes = augment.random_flip_lr(image, bboxes)
-        image, bboxes = augment.random_rotate(image, bboxes)
-        image, bboxes, labels = augment.random_crop_and_zoom(image, bboxes, labels, (self._image_size, self._image_size))
 
-        #image, bboxes = preprocess_image(image, (self._image_size, self._image_size), bboxes)
+        if self.normal_method:
+            image = augment.random_distort(image)
+            image = augment.random_grayscale(image)
+            image, bboxes = augment.random_flip_lr(image, bboxes)
+            image, bboxes = augment.random_rotate(image, bboxes)
+            image, bboxes, labels = augment.random_crop_and_zoom(image, bboxes, labels,
+                                                                 (self._image_size, self._image_size))
+        else:
+
+            image, bboxes = preprocess_image(image, (self._image_size, self._image_size), bboxes)
 
         labels = augment.onehot(labels, self.num_classes, self.label_smoothing)
 
@@ -128,7 +132,8 @@ class Dataset(Sequence):
 
         bboxes_wh_exp = np.tile(np.expand_dims(bboxes_wh, 1), (1, self._anchors.shape[0], 1))
         boxes_area = bboxes_wh_exp[..., 0] * bboxes_wh_exp[..., 1]
-        intersection = np.minimum(bboxes_wh_exp[..., 0], self._anchors[:, 0]) * np.minimum(bboxes_wh_exp[..., 1], self._anchors[:, 1])
+        intersection = np.minimum(bboxes_wh_exp[..., 0], self._anchors[:, 0]) * np.minimum(bboxes_wh_exp[..., 1],
+                                                                                           self._anchors[:, 1])
         iou = intersection / (boxes_area + anchor_area - intersection + 1e-8)  # (N, A)
         anchor_idxs = np.argmax(iou, axis=-1)  # (N,)
 
