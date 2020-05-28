@@ -8,13 +8,13 @@ yolo:
   mask: "3,4,5 0,1,2"
 
 train:
-  label: "voc_yolov3_tiny_SM_DM_CIoU_FL"
-  name_path: "./data/pascal_voc/voc.name"
-  anno_path: "./data/pascal_voc/train.txt"
+  label: "coco_yolov3_tiny"
+  name_path: "./data/coco/coco.name"
+  anno_path: "./data/coco/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
   batch_size: 4
-  init_weight_path: "./ckpts/yolov3-tiny.h5"
+  init_weight_path: "./ckpts/yolov3-tiny.weights"
   save_weight_path: "./ckpts"
 
   loss_type: "CIoU+FL"
@@ -25,10 +25,10 @@ train:
   label_smoothing: false
   normal_method: true
 
-  ignore_threshold: 0.5
+  ignore_threshold: 0.7
 
 test:
-  anno_path: "./data/pascal_voc/test.txt"
+  anno_path: "./data/coco/test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: ""
+  init_weight_path: "./ckpts/yolov3-tiny.weights"

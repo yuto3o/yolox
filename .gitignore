@@ -145,6 +145,7 @@ venv/
 
 # data
 ckpts/
+test*.py
 
 
 

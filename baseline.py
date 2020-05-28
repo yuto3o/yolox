@@ -8,14 +8,14 @@ from tensorflow.keras import optimizers
 from core.utils import decode_cfg, load_weights
 from core.dataset import Dataset
 from core.callbacks import COCOEvalCheckpoint
-from core.model.one_stage.yolov3 import YoloV3_Tiny, YoloLoss
+from core.model.one_stage.yolov3 import YOLOv3_Tiny, YOLOLoss
 
 import copy
 
 
 def main(_argv):
-    cfg = decode_cfg("cfgs/voc_yolov3-tiny.yaml")
-    model, eval_model = YoloV3_Tiny(cfg)
+    cfg = decode_cfg("cfgs/voc_yolov3_tiny.yaml")
+    model, eval_model = YOLOv3_Tiny(cfg)
     model.summary()
     train_dataset = Dataset(cfg)
 
@@ -29,7 +29,7 @@ def main(_argv):
     if init_weight:
         load_weights(model, init_weight)
 
-    loss = [YoloLoss(anchors[mask[i]],
+    loss = [YOLOLoss(anchors[mask[i]],
                      strides[i],
                      train_dataset.num_classes,
                      ignore_threshold,

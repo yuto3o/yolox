@@ -1,1 +1,1 @@
-from core.model.one_stage.yolov3.yolov3 import YoloV3_Tiny, YoloV3, YoloLoss
+from core.model.one_stage.yolov3.yolov3 import YOLOv3_Tiny, YOLOv3, YOLOLoss

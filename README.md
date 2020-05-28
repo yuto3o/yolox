@@ -22,7 +22,7 @@ This repository have done:
   - Use YAML as config file in [cfgs](./cfgs)
 - [ ] Data Augmentation
   - [x] Standard Method: Random Flip, Random Crop, Zoom, Random Grayscale, Random Distort, Rotate
-  - [x] Hight Level: Cut Mix, Mix Up, Mosaic
+  - [x] Hight Level: Cut Mix, Mix Up, Mosaic （These Online Augmentations is Slow）
   - [ ] More, I can be so much more ... 
 - [ ] For Loss
   - [x] Label Smoothing
@@ -79,7 +79,7 @@ train:
   init_weight_path: "./ckpts/yolov3-tiny.h5"
   save_weight_path: "./ckpts"
 
-  # Must be "L2", "CIou", "GIou", "CIou" or something like "L2+FL" for focal loss
+  # Must be "L2", "DIoU", "GIoU", "CIoU" or something like "L2+FL" for focal loss
   loss_type: "L2" 
   
   # turn on hight level data augmentation
@@ -87,6 +87,7 @@ train:
   cut_mix: false
   mosaic: false
   label_smoothing: false
+  normal_method: true
 
   ignore_threshold: 0.5
 
@@ -111,13 +112,23 @@ dataset_path = './data/pascal_voc/train.txt'
 
 ### 1.4 Inference
 
-A simple demo for YOLOv4
+#### A Simple Script for Video, Device or Image
+
+Only support mp4, avi, device id, rtsp, png, jpg (Based on OpenCV) 
+
+```shell
+python python detector.py --config=./cfgs/coco_yolov4.yaml --media=./misc/street.mp4 --gpu=false
+```
+
+![gif](./misc/street.gif)
+
+#### A simple demo for YOLOv4
 
 ![yolov4](./misc/dog_v4.jpg)
 
 ```python
 from core.utils import decode_cfg, load_weights
-from core.model.one_stage.yolov4 import YoloV4
+from core.model.one_stage.yolov4 import YOLOv4
 from core.image import draw_bboxes, preprocess_image, preprocess_image_inv, read_image, Shader
 
 import numpy as np
@@ -125,25 +136,25 @@ import cv2
 import time
 
 # read config
-cfg = decode_cfg("cfgs/coco_yolov4.yaml")
+cfg = decode_cfg('cfgs/coco_yolov4.yaml')
 
-model, eval_model = YoloV4(cfg)
+model, eval_model = YOLOv4(cfg)
 eval_model.summary()
 
 # assign colors for difference labels
-names = cfg["train"]["names"]
-shader = Shader(len(names))
+shader = Shader(cfg['yolo']['num_classes'])
 
 # load weights
-load_weights(model, cfg["test"]["init_weight_path"])
+load_weights(model, cfg['test']['init_weight_path'])
 
-img_raw = read_image(r'./misc/dog.jpg')
+img_raw = read_image('./misc/dog.jpg')
 img = preprocess_image(img_raw, (512, 512))
 imgs = img[np.newaxis, ...]
 
 tic = time.time()
 boxes, scores, classes, valid_detections = eval_model.predict(imgs)
-print(time.time() - tic, 's')
+toc = time.time()
+print((toc - tic)*1000, 'ms')
 
 # for single image, batch size is 1
 valid_boxes = boxes[0][:valid_detections[0]]
@@ -159,9 +170,29 @@ cv2.imwrite('./misc/dog_v4.jpg', img)
 cv2.waitKey()
 ```
 
+
+
 ## 2. Experiment
 
-We freeze backbone for first 30 epochs(lr=1e-4), and then finetune  all of the trainable variables for another 50 epochs(lr=1e-5), and final10 epochs for evaluation(lr=1e-6).
+**i7-9700F+16GB**
+
+| Model       | 416x416 | 512x512 | 608x608 |
+| ----------- | ------- | ------- | ------- |
+| YOLOv3      |         |         |         |
+| YOLOv3-tiny |         |         |         |
+| YOLOv4      |         |         |         |
+| YOLOv4-tiny |         |         |         |
+
+**i7-9700F+16GB / RTX 2070S+8G**
+
+| Model       | 416x416 | 512x512 | 608x608 |
+| ----------- | ------- | ------- | ------- |
+| YOLOv3      |         |         |         |
+| YOLOv3-tiny |         |         |         |
+| YOLOv4      |         |         |         |
+| YOLOv4-tiny |         |         |         |
+
+We freeze backbone for the first 30 epoches (lr=1e-4), and then finetune  all of the trainable variables for another 50 epoches (lr=1e-5), and final 10 epoches for evaluation(lr=1e-6).
 
 | Name                    | Abbr |
 | ----------------------- | ---- |
@@ -184,22 +215,35 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 | ✔    | ✔    |      |      |      |      |      | L2   | 22.8 | 49.8   | 16.3   |
 | ✔    | ✔    | ✔    |      |      |      |      | L2   | 21.9 | 48.5   | 15.4   |
 | ✔    | ✔    |      |      |      |      |      | CIoU | 25.3 | 50.5   | 21.8   |
-| ✔    | ✔    |      | ✔    |      |      |      | CIoU | 24.8 | 48.3   | 22.5   |
+| ✔    | ✔    |      | ✔    |      |      |      | CIoU | 25.6 | 49.4   | 23.6   |
 | ✔    | ✔    |      | ✔    | ✔    |      |      | CIoU |      |        |        |
 | ✔    | ✔    |      | ✔    |      | ✔    |      | CIoU |      |        |        |
 | ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU |      |        |        |
 
 Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
 
+**YOLOv3**(TODO; Pretrained on COCO)
+
+| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
+| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+
 **YOLOv4-tiny**(TODO; Train from Scratch)
 
 | SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-|      |      |      |      |      |      |      | L2   |      |        |        |
-| ✔    |      |      |      |      |      |      | L2   |      |        |        |
-| ✔    | ✔    |      |      |      |      |      | L2   |      |        |        |
-| ✔    | ✔    | ✔    |      |      |      |      | L2   |      |        |        |
-| ✔    | ✔    | ✔    |      |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
+| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+
+**YOLOv4**(TODO; Train from Scratch)
+
+| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
 | ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
 | ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
 | ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |

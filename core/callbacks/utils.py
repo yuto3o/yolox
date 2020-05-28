@@ -31,6 +31,7 @@ def local_eval(func, model, image_size, test_path, name_path, verbose):
         lines = f.readlines()
     paths = [line.split()[0] for line in lines]
 
+    infer_time = []
     with open(tmp_path, 'a+') as f:
         for i, path in enumerate(paths, 1):
             if i == 1:
@@ -41,7 +42,10 @@ def local_eval(func, model, image_size, test_path, name_path, verbose):
             image = preprocess_image(image, (image_size, image_size)).astype(np.float32)
             images = np.expand_dims(image, axis=0)
 
+            tic = time.time()
             bboxes, scores, classes, valid_detections = model.predict(images)
+            toc = time.time()
+            infer_time.append(toc - tic)
 
             bboxes = bboxes[0][:valid_detections[0]]
             scores = scores[0][:valid_detections[0]]
@@ -58,8 +62,15 @@ def local_eval(func, model, image_size, test_path, name_path, verbose):
             f.write(line + '\n')
 
     ans = func(test_path, tmp_path, name_path, verbose)
-
     # remove tmp
     os.remove(tmp_path)
+
+    if verbose:
+        if len(infer_time) > 5:
+            s = np.mean(infer_time[5:])
+        else:
+            s = np.mean(infer_time)
+
+        print('Inference time', s*1000, 'ms')
 
     return ans

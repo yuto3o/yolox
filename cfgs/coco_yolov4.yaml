@@ -2,7 +2,7 @@ yolo:
   type: "yolov4"
   iou_threshold: 0.45
   score_threshold: 0.5
-  max_boxes: 300
+  max_boxes: 100
   strides: "32,16,8"
   anchors: "12,16 19,36 40,28 36,75 76,55 72,146 142,110 192,243 459,401"
   mask: "6,7,8 3,4,5 0,1,2"
@@ -10,26 +10,25 @@ yolo:
 train:
   label: "coco_yolov4"
   name_path: "./data/coco/coco.name"
-  anno_path: "./data/pascal_voc/train.txt"
+  anno_path: "./data/coco/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
   batch_size: 4
-  init_weight_path: "./ckpts/yolov3.weights"
-
-  sample_rate: 5
+  init_weight_path: "./ckpts/yolov4.weights"
   save_weight_path: "./ckpts"
 
-  bbox_loss: "L2"
+  loss_type: "CIoU+FL"
 
   mix_up: false
   cut_mix: false
   mosaic: false
   label_smoothing: false
+  normal_method: true
 
   ignore_threshold: 0.7
 
 test:
-  anno_path: "./data/pascal_voc/test.txt"
+  anno_path: "./data/coco/test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: ""
+  init_weight_path: "./ckpts/yolov4.weights"

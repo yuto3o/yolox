@@ -41,7 +41,7 @@ def DarknetBlock(filters, niter):
     return wrapper
 
 
-def YoloV3_Tiny(cfg,
+def YOLOv3_Tiny(cfg,
                 input_size=None,
                 name=None):
     iou_threshold = cfg["yolo"]["iou_threshold"]
@@ -86,7 +86,7 @@ def YoloV3_Tiny(cfg,
 
     model = tf.keras.Model(inputs, (output_0, output_1), name=name)
 
-    outputs = YoloHeader(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
+    outputs = YOLOHeader(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
         (output_0, output_1))
 
     eval_model = tf.keras.Model(inputs, outputs, name=name)
@@ -94,7 +94,7 @@ def YoloV3_Tiny(cfg,
     return model, eval_model
 
 
-def YoloV3(cfg,
+def YOLOv3(cfg,
            input_size=None,
            name=None):
     iou_threshold = cfg["yolo"]["iou_threshold"]
@@ -155,7 +155,7 @@ def YoloV3(cfg,
     output_2 = DarknetConv2D(len(mask[2]) * (num_classes + 5), 1)(x)
     model = tf.keras.Model(inputs, (output_0, output_1, output_2), name=name)
 
-    outputs = YoloHeader(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
+    outputs = YOLOHeader(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
         (output_0, output_1, output_2))
     eval_model = tf.keras.Model(inputs, outputs, name=name)
 
@@ -178,7 +178,7 @@ class PreprocessInput(tf.keras.layers.Layer):
         return input_shape
 
 
-class YoloHeader(tf.keras.layers.Layer):
+class YOLOHeader(tf.keras.layers.Layer):
 
     def __init__(self, num_classes, anchors, mask, strides,
                  max_outputs, iou_threshold, score_threshold, **kwargs):
@@ -190,10 +190,10 @@ class YoloHeader(tf.keras.layers.Layer):
         self.max_outputs = max_outputs
         self.iou_threshold = iou_threshold
         self.score_threshold = score_threshold
-        super(YoloHeader, self).__init__(**kwargs)
+        super(YOLOHeader, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        super(YoloHeader, self).build(input_shape)  # Be sure to call this at the end
+        super(YOLOHeader, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, inputs, **kwargs):
         boxes, objects, classes = [], [], []
@@ -292,7 +292,7 @@ def _yolo_boxes(y_pred, num_classes, anchors):
     return pred_box, pred_obj, pred_class, pred_xywh
 
 
-def YoloLoss(anchors, stride, num_classes, ignore_thresh, type):
+def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
     def wrapper(y_true, y_pred):
         # 0. default
         dtype = y_pred.dtype
@@ -341,7 +341,6 @@ def YoloLoss(anchors, stride, num_classes, ignore_thresh, type):
         ignore_mask = tf.cast(best_iou < ignore_thresh, dtype)
 
         # 5. calculate all losses
-
         if 'L2' in type:
             xy_loss = 0.5 * tf.reduce_sum(tf.square(true_xy - pred_xy), axis=-1)
             wh_loss = 0.5 * tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)

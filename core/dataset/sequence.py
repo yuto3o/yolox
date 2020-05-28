@@ -100,7 +100,6 @@ class Dataset(Sequence):
         image = read_image(path)
         bboxes, labels = np.array(bboxes), np.array(labels)
 
-
         if self.normal_method:
             image = augment.random_distort(image)
             image = augment.random_grayscale(image)
@@ -443,7 +442,7 @@ class Dataset(Sequence):
 #     return img
 
 if __name__ == '__main__':
-    cfg = decode_cfg("C:\\Users\\test\\Documents\\CodeHub\\Detection\\cfgs\\voc_yolov3-tiny.yaml")
+    cfg = decode_cfg("C:\\Users\\test\\Documents\\CodeHub\\Detection\\cfgs\\voc_yolov3_tiny.yaml")
     dataset = Dataset(cfg, verbose=1)
 
     for idx in range(len(dataset)):
