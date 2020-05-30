@@ -189,8 +189,8 @@ cv2.waitKey()
 | ----------- | ------- | ------- | ------- |
 | YOLOv3      |         |         |         |
 | YOLOv3-tiny |         |         |         |
-| YOLOv4      |         |         |         |
-| YOLOv4-tiny |         |         |         |
+| YOLOv4      | 61 ms   |         |         |
+| YOLOv4-tiny | 29 ms   |         |         |
 
 We freeze backbone for the first 30 epoches (lr=1e-4), and then finetune  all of the trainable variables for another 50 epoches (lr=1e-5), and final 10 epoches for evaluation(lr=1e-6).
 
@@ -218,7 +218,7 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 | ✔    | ✔    |      | ✔    |      |      |      | CIoU | 25.6 | 49.4   | 23.6   |
 | ✔    | ✔    |      | ✔    | ✔    |      |      | CIoU |      |        |        |
 | ✔    | ✔    |      | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU |      |        |        |
+| ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU | 23.7 | 46.1   | 21.3   |
 
 Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
 
@@ -231,16 +231,16 @@ Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
 | ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
 | ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
 
-**YOLOv4-tiny**(TODO; Train from Scratch)
+**YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights)
 
 | SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+| ✔    | ✔    |      | ✔    |      |      |      | CIoU | 27.6 | 48.3   | 28.9   |
+| ✔    | ✔    |      | ✔    | ✔    |      |      | CIoU |      |        |        |
+| ✔    | ✔    |      | ✔    |      | ✔    |      | CIoU |      |        |        |
+| ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU |      |        |        |
 
-**YOLOv4**(TODO; Train from Scratch)
+**YOLOv4**(TODO; Pretrained on COCO)
 
 | SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |

@@ -1,0 +1,34 @@
+yolo:
+  type: "yolov4_tiny"
+  iou_threshold: 0.45
+  score_threshold: 0.5
+  max_boxes: 100
+  strides: "32,16"
+  anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
+  mask: "3,4,5 0,1,2"
+
+train:
+  label: "voc_yolov4_tiny_SM_DM_CIoU_FL"
+  name_path: "./data/pascal_voc/voc.name"
+  anno_path: "./data/pascal_voc/train.txt"
+  image_size: "320,352,384,416,448,480,512,544,576,608"
+
+  batch_size: 4
+  init_weight_path: "./ckpts/yolov3-tiny.h5"
+  save_weight_path: "./ckpts"
+
+  loss_type: "CIoU+FL"
+
+  mix_up: false
+  cut_mix: false
+  mosaic: false
+  label_smoothing: false
+  normal_method: true
+
+  ignore_threshold: 0.5
+
+test:
+  anno_path: "./data/pascal_voc/test.txt"
+  image_size: "416"
+  batch_size: 1
+  init_weight_path: ""

@@ -8,15 +8,14 @@ from tensorflow.keras import optimizers
 from core.utils import decode_cfg, load_weights
 from core.dataset import Dataset
 from core.callbacks import COCOEvalCheckpoint
-from core.model.one_stage.yolov3 import YOLOv3_Tiny, YOLOLoss
-from core.model.one_stage.yolov4 import YOLOv4_Tiny, YOLOLoss
+from core.model.one_stage.yolov4 import YOLOv4, YOLOLoss
 
 import copy
 
 
 def main(_argv):
-    cfg = decode_cfg("cfgs/voc_yolov4_tiny.yaml")
-    model, eval_model = YOLOv4_Tiny(cfg)
+    cfg = decode_cfg("cfgs/voc_yolov4.yaml")
+    model, eval_model = YOLOv4(cfg)
     model.summary()
     train_dataset = Dataset(cfg)
 
@@ -50,33 +49,34 @@ def main(_argv):
         COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
                            eval_model=eval_model,
                            model_cfg=cfg,
-                           sample_rate=5,
+                           sample_rate=10,
                            verbose=1),
         COCOEvalCheckpoint(save_path=None,
                            eval_model=eval_model,
                            model_cfg=_cfg,
-                           sample_rate=5,
+                           sample_rate=10,
                            verbose=1)
     ]
 
 
-    num = 29
+    num = 186
     for i in range(num): model.layers[i].trainable = False
     print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
 
     model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-4), run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
-              epochs=30,
+              epochs=70,
               callbacks=callback
               )
 
     for i in range(len(model.layers)): model.layers[i].trainable = True
 
+
     model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-5), run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
-              epochs=50,
+              epochs=80,
               callbacks=callback
               )
 

@@ -113,7 +113,7 @@ def YOLOv4_Tiny(cfg,
 
     # 38x38 output
     x = DarknetConv2D_BN_Leaky(256, (3, 3))(x)
-    output_1 = DarknetConv2D(len(mask[2]) * (num_classes + 5), (1, 1))(x)
+    output_1 = DarknetConv2D(len(mask[0]) * (num_classes + 5), (1, 1))(x)
 
     x = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(x_38)
     x = DarknetConv2D_BN_Leaky(256, (3, 3), strides=(2, 2))(x)
@@ -121,7 +121,7 @@ def YOLOv4_Tiny(cfg,
     x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
 
     x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    output_0 = DarknetConv2D(len(mask[2]) * (num_classes + 5), (1, 1))(x)
+    output_0 = DarknetConv2D(len(mask[1]) * (num_classes + 5), (1, 1))(x)
 
     model = tf.keras.Model(inputs, [output_0, output_1], name=name)
 
