@@ -13,7 +13,7 @@ train:
   anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
-  batch_size: 3
+  batch_size: 2
   init_weight_path: "./ckpts/yolov4.h5"
   save_weight_path: "./ckpts"
 

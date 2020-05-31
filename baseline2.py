@@ -59,16 +59,17 @@ def main(_argv):
                            verbose=1)
     ]
 
-    num = 186
-    for i in range(num): model.layers[i].trainable = False
-    print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
+    # num = 186
+    # for i in range(num): model.layers[i].trainable = False
+    # print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
 
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0), run_eagerly=False)
+    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0.), run_eagerly=False)
     # warm-up
+    epochs = 5
     model.fit(train_dataset,
-              steps_per_epoch=len(train_dataset),
-              epochs=5,
-              callbacks=[WarmUpScheduler(learning_rate=1e-3, warmup_step=5 * len(train_dataset), verbose=1)]
+              steps_per_epoch=epochs*len(train_dataset),
+              epochs=epochs,
+              callbacks=[WarmUpScheduler(learning_rate=1e-3, warmup_step=epochs * len(train_dataset), verbose=1)]
               )
 
     epochs = 50
@@ -79,10 +80,10 @@ def main(_argv):
                   CosineAnnealingScheduler(learning_rate=1e-3, T_max=epochs * len(train_dataset), verbose=1)]
               )
 
-    for i in range(len(model.layers)): model.layers[i].trainable = True
+    # for i in range(len(model.layers)): model.layers[i].trainable = True
 
     epochs = 60
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0), run_eagerly=False)
+    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0.), run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
               epochs=epochs,
@@ -99,12 +100,12 @@ def main(_argv):
     ]
 
     epochs = 80
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-5), run_eagerly=False)
+    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0., run_eagerly=False))
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
               epochs=epochs,
               callbacks=callback + [
-                  CosineAnnealingScheduler(learning_rate=1e-4, T_max=epochs * len(train_dataset), verbose=1)]
+                  CosineAnnealingScheduler(learning_rate=1e-5, T_max=epochs * len(train_dataset), verbose=1)]
               )
 
     model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-6), run_eagerly=False)
