@@ -103,8 +103,13 @@ def main(_argv):
             image = draw_bboxes(image, bboxes, scores, classes, names, shader)
             d.append(ms)
 
-            print('Inference Time:', np.mean(d), 'ms')
+            mms = np.mean(d)
+            print('Inference Time:', mms, 'ms')
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            image = cv2.putText(image,
+                                "{:.2f} ms".format(mms),
+                                (0, 30),
+                                cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), 2)
             cv2.imshow('Image', image)
             if cv2.waitKey(33) == ord('q'):
                 break

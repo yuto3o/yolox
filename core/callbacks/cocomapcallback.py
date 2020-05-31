@@ -46,8 +46,8 @@ class COCOEvalCheckpoint(tf.keras.callbacks.Callback):
                     print(
                         "mAP improved from {:.2%} to {:.2%}, saving model to {}".format(self._best_mAP, mAP, save_path))
 
-                self._best_mAP = mAP
                 self.eval_model.save_weights(save_path)
+            self._best_mAP = mAP
         else:
             if self.verbose > 0:
                 print("mAP not improved from {:.2%}".format(self._best_mAP))

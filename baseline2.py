@@ -7,7 +7,7 @@ from tensorflow.keras import optimizers
 
 from core.utils import decode_cfg, load_weights
 from core.dataset import Dataset
-from core.callbacks import COCOEvalCheckpoint
+from core.callbacks import COCOEvalCheckpoint, CosineAnnealingScheduler, WarmUpScheduler
 from core.model.one_stage.yolov4 import YOLOv4, YOLOLoss
 
 import copy
@@ -45,6 +45,7 @@ def main(_argv):
 
     _cfg = copy.deepcopy(cfg)
     _cfg['test']['anno_path'] = "./data/pascal_voc/voc2007_val.txt"
+
     callback = [
         COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
                            eval_model=eval_model,
@@ -58,26 +59,35 @@ def main(_argv):
                            verbose=1)
     ]
 
-
     num = 186
     for i in range(num): model.layers[i].trainable = False
     print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
 
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-4), run_eagerly=False)
+    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0), run_eagerly=False)
+    # warm-up
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
-              epochs=70,
-              callbacks=callback
+              epochs=5,
+              callbacks=[WarmUpScheduler(learning_rate=1e-3, warmup_step=5 * len(train_dataset), verbose=1)]
+              )
+
+    epochs = 50
+    model.fit(train_dataset,
+              steps_per_epoch=len(train_dataset),
+              epochs=epochs,
+              callbacks=callback + [
+                  CosineAnnealingScheduler(learning_rate=1e-3, T_max=epochs * len(train_dataset), verbose=1)]
               )
 
     for i in range(len(model.layers)): model.layers[i].trainable = True
 
-
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-5), run_eagerly=False)
+    epochs = 60
+    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0), run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
-              epochs=80,
-              callbacks=callback
+              epochs=epochs,
+              callbacks=callback + [
+                  CosineAnnealingScheduler(learning_rate=1e-4, T_max=epochs * len(train_dataset), verbose=1)]
               )
 
     callback = [
@@ -87,6 +97,15 @@ def main(_argv):
                            sample_rate=1,
                            verbose=1),
     ]
+
+    epochs = 80
+    model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-5), run_eagerly=False)
+    model.fit(train_dataset,
+              steps_per_epoch=len(train_dataset),
+              epochs=epochs,
+              callbacks=callback + [
+                  CosineAnnealingScheduler(learning_rate=1e-4, T_max=epochs * len(train_dataset), verbose=1)]
+              )
 
     model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-6), run_eagerly=False)
     model.fit(train_dataset,
