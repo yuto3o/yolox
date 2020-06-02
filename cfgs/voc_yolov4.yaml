@@ -11,9 +11,9 @@ train:
   label: "voc_yolov4_NM_LS_CIoU_FL"
   name_path: "./data/pascal_voc/voc.name"
   anno_path: "./data/pascal_voc/train.txt"
-  image_size: "416" #"320,352,384,416,448,480,512,544,576,608"
+  image_size: "320,352,384,416,448,480,512,544,576,608"
 
-  batch_size: 16
+  batch_size: 2
   init_weight_path: "./ckpts/yolov4.h5"
   save_weight_path: "./ckpts"
 

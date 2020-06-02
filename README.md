@@ -10,6 +10,14 @@ YOLOv4-tiny(unofficial)
 
 ---
 
+## News !
+
+- Small batch size is used, because available GPU (8G) has small memory. 
+- Online High Level augmentation will slow down training speed.
+- When I tried to train yolov3 or yolov4, 'NaN' problem made me crazy.
+
+---
+
 This repository have done:
 
 - [x] Backbone for YOLO (YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny[unofficial])
@@ -17,9 +25,12 @@ This repository have done:
 - [x] Keras Callbacks for Online Evaluation
 - [x] Load Official Weight File
 - [x] K-Means for Anchors
-- [x] Training Script (Strategy and Model Config)
+- [x] Fight with 'NaN'
+- [x] Train (Strategy and Model Config)
   - Define simple training in [train.py](./train.py)
   - Use YAML as config file in [cfgs](./cfgs)
+  - [x] Cosine Annealing LR
+  - [x] Warm-up
 - [ ] Data Augmentation
   - [x] Standard Method: Random Flip, Random Crop, Zoom, Random Grayscale, Random Distort, Rotate
   - [x] Hight Level: Cut Mix, Mix Up, Mosaic （These Online Augmentations is Slow）
@@ -34,7 +45,7 @@ This repository have done:
 
 [toc]
 
-## 0. Read Source Code for More Details
+## 0. Please Read Source Code for More Details
 
 You can get official weight files from https://github.com/AlexeyAB/darknet/releases or https://pjreddie.com/darknet/yolo/.
 
@@ -116,11 +127,11 @@ dataset_path = './data/pascal_voc/train.txt'
 
 Only support mp4, avi, device id, rtsp, png, jpg (Based on OpenCV) 
 
-```shell
-python python detector.py --config=./cfgs/coco_yolov4.yaml --media=./misc/street.mp4 --gpu=false
-```
-
 ![gif](./misc/street.gif)
+
+```shell
+python detector.py --config=./cfgs/coco_yolov4.yaml --media=./misc/street.mp4 --gpu=false
+```
 
 #### A simple demo for YOLOv4
 
@@ -170,9 +181,15 @@ cv2.imwrite('./misc/dog_v4.jpg', img)
 cv2.waitKey()
 ```
 
+## 2. Train
 
+!!! Please Read the abve guide (1.1, 1.2).
 
-## 2. Experiment
+```shell
+python train.py --config=./cfgs/voc_yolov4.yaml
+```
+
+## 3. Experiment
 
 **i7-9700F+16GB**
 
@@ -249,13 +266,13 @@ Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
 | ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
 | ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
 
-## 3. Reference
+## 4. Reference
 
 - https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3
 - https://github.com/hunglc007/tensorflow-yolov4-tflite
 - https://github.com/experiencor/keras-yolo3
 
-## 4. History
+## 5. History
 
 - Slim version: https://github.com/yuto3o/yolox/tree/slim
 - Tensorflow2.0-YOLOv3: https://github.com/yuto3o/yolox/tree/yolov3-tf2

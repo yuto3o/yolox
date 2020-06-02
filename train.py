@@ -66,11 +66,8 @@ def main(_argv):
 
     ckpt_path = os.path.join(cfg["train"]["save_weight_path"], 'tmp', cfg["train"]["label"],
                              time.strftime("%Y%m%d%H%M", time.localtime()))
-    if not os.path.isdir(ckpt_path):
-        os.makedirs(ckpt_path)
-    #     os.makedirs(os.path.join(ckpt_path, 'log', 'train', 'plugins', 'profile'))
 
-    warmup_epochs = 10
+    warmup_epochs = 3
     warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=warmup_epochs * len(train_dataset), verbose=1)]
 
     eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
@@ -84,22 +81,23 @@ def main(_argv):
                                             T_max=epochs * len(train_dataset),
                                             verbose=1)]
 
+
+
+    # warm-up
     for i in range(num): model.layers[i].trainable = False
     print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
 
-    # warm-up
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0.), run_eagerly=False)
+    opt = optimizers.Adam(lr=0.)
+    model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
               epochs=warmup_epochs,
               callbacks=warmup_callback
               )
-    model.save_weights('./weights.h5')
 
     for i in range(len(model.layers)): model.layers[i].trainable = True
     print('Unfreeze all layers.')
-
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=0.), run_eagerly=False)
+    model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
               epochs=epochs,
