@@ -358,7 +358,7 @@ def _broadcast_iou(box_1, box_2):
     int_area = int_w * int_h
     box_1_area = (box_1[..., 2] - box_1[..., 0]) * (box_1[..., 3] - box_1[..., 1])
     box_2_area = (box_2[..., 2] - box_2[..., 0]) * (box_2[..., 3] - box_2[..., 1])
-    return int_area / (box_1_area + box_2_area - int_area + 1e-8)
+    return int_area / tf.maximum(box_1_area + box_2_area - int_area, 1e-8)
 
 
 def _yolo_boxes(y_pred, num_classes, anchors):
@@ -428,27 +428,25 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         weight = tf.squeeze(true_weight, -1)
         # ignore false positive when iou is over threshold
         best_iou = tf.map_fn(
-            lambda x: tf.reduce_max(_broadcast_iou(x[0], tf.boolean_mask(
-                x[1], tf.cast(x[2], tf.bool))), axis=-1),
+            lambda x: tf.reduce_max(_broadcast_iou(x[0], tf.boolean_mask(x[1], tf.cast(x[2], tf.bool))), axis=-1),
             (pred_box, true_box, obj_mask),
             dtype)
         ignore_mask = tf.cast(best_iou < ignore_thresh, dtype)
 
         # 5. calculate all losses
-
         if 'L2' in type:
             xy_loss = 0.5 * tf.reduce_sum(tf.square(true_xy - pred_xy), axis=-1)
             wh_loss = 0.5 * tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)
             box_loss = xy_loss + wh_loss
         elif 'GIoU' in type:
             giou = GIoU(pred_box, true_box)
-            box_loss = 1 - giou
+            box_loss = 1. - giou
         elif 'DIoU' in type:
             diou = DIoU(pred_box, true_box)
-            box_loss = 1 - diou
+            box_loss = 1. - diou
         elif 'CIoU' in type:
             ciou = CIoU(pred_box, true_box)
-            box_loss = 1 - ciou
+            box_loss = 1. - ciou
         else:
             raise NotImplementedError('Loss Type', type, 'is Not Implemented!')
 
@@ -457,7 +455,7 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         obj_loss = obj_mask * obj_loss + (1 - obj_mask) * ignore_mask * obj_loss
         cls_loss = obj_mask * tf.keras.losses.binary_crossentropy(true_cls, pred_cls)
 
-        def _focal_loss(y_true, y_pred, alpha=1, gamma=2):
+        def _focal_loss(y_true, y_pred, alpha=1., gamma=2.):
             focal_loss = tf.squeeze(alpha * tf.pow(tf.abs(y_true - y_pred), gamma), axis=-1)
             return focal_loss
 
@@ -470,7 +468,6 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         obj_loss = tf.reduce_mean(tf.reduce_sum(weight * obj_loss, axis=(1, 2, 3)))
         cls_loss = tf.reduce_mean(tf.reduce_sum(weight * cls_loss, axis=(1, 2, 3)))
 
-        # if tf.math.is_nan(box_loss) or tf.math.is_nan(obj_loss)  or tf.math.is_nan(cls_loss):
         # tf.print('loss', box_loss, obj_loss, cls_loss)
 
         return box_loss + obj_loss + cls_loss
@@ -500,32 +497,22 @@ if __name__ == '__main__':
     x = tf.keras.layers.MaxPool2D(2, 1, "same")(x)
     x = DarknetConv2D_BN_Mish(1024, 3)(x)
 
-    # 19x19 head
-    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-    maxpool1 = tf.keras.layers.MaxPooling2D(pool_size=(9, 9), strides=(1, 1), padding='same')(x)
-    maxpool2 = tf.keras.layers.MaxPooling2D(pool_size=(5, 5), strides=(1, 1), padding='same')(x)
-    x = tf.keras.layers.Concatenate()([maxpool1, maxpool2, x])
-    # 19x19 head
-    x = x_19 = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    x19_upsample = tf.keras.layers.UpSampling2D(2)(x)
+    model = tf.keras.Model(inputs, x)
+    print(len(model.layers))
 
-    # 38x38 head
-    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x_8)
-    x = tf.keras.layers.Concatenate()([x, x19_upsample])
-    x = x_38 = DarknetConv2D_BN_Leaky(128, (1, 1))(x)
 
-    # 38x38 output
-    x = DarknetConv2D_BN_Leaky(256, (3, 3))(x)
-    output_1 = DarknetConv2D(75, (1, 1))(x)
+    x = inputs = tf.keras.Input([None, None, 3])
+    x = PreprocessInput()(x)
+    x = DarknetConv2D_BN_Mish(32, (3, 3))(x)
+    x = DarknetBlock(64, 1, False)(x)
+    x = DarknetBlock(128, 2)(x)
+    x = x_131 = DarknetBlock(256, 8)(x)
+    x = x_204 = DarknetBlock(512, 8)(x)
+    x = DarknetBlock(1024, 4)(x)
 
-    x = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(x_38)
-    x = DarknetConv2D_BN_Leaky(256, (3, 3), strides=(2, 2))(x)
-    x = tf.keras.layers.Concatenate()([x, x_19])
-    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
+    model = tf.keras.Model(inputs, x)
+    print(len(model.layers))
 
-    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    output_0 = DarknetConv2D(75, (1, 1))(x)
 
-    model = tf.keras.Model(inputs, [output_0, output_1])
-    model.summary()
+
+

@@ -78,3 +78,5 @@ class WarmUpScheduler(tf.keras.callbacks.Callback):
         learning_rate = np.where(self.global_step < self.warmup_step, warmup_rate,
                                  self.learning_rate)
         tf.keras.backend.set_value(self.model.optimizer.lr, learning_rate)
+
+        # print('\nBatch %s: current learning rate to %s.' % (batch + 1, self.model.optimizer.lr.numpy()))

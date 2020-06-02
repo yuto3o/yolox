@@ -19,12 +19,10 @@ import time
 import cv2
 import numpy as np
 
-flags.DEFINE_string("config", None, "path to config file")
-flags.DEFINE_string("media", None,
-                    "path to video file (MP4, AVI) or number for web camera(RTSP, or device ID) or image(JPEG, PNG)")
-flags.DEFINE_bool("gpu", False,
-                  "Use GPU")
-
+flags.DEFINE_string('config', '', "path to config file")
+flags.DEFINE_string('media', '',
+                    'path to video file (MP4, AVI) or number for web camera(RTSP, or device ID) or image(JPEG, PNG)')
+flags.DEFINE_bool('gpu', False, 'Use GPU')
 FLAGS = flags.FLAGS
 
 
@@ -36,7 +34,7 @@ def main(_argv):
 
     if not FLAGS.gpu:
         import os
-        os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
     cfg = decode_cfg(FLAGS.config)
 

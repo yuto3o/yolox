@@ -31,7 +31,7 @@ def GIoU(y_pred_box, y_true_box):
     y_true_box_area = y_true_box_wh[..., 0] * y_true_box_wh[..., 1]
     union_area = y_pred_box_area + y_true_box_area - intersect_area
     # calculate IoU, add epsilon in denominator to avoid dividing by 0
-    iou = intersect_area / (union_area + 1e-8)
+    iou = intersect_area / tf.maximum(union_area, 1e-8)
 
     # get enclosed area
     enclose_min = tf.minimum(y_true_box_min, y_pred_box_min)
@@ -39,7 +39,7 @@ def GIoU(y_pred_box, y_true_box):
     enclose_wh = tf.maximum(enclose_max - enclose_min, 0.0)
     enclose_area = enclose_wh[..., 0] * enclose_wh[..., 1]
     # calculate GIoU, add epsilon in denominator to avoid dividing by 0
-    giou = iou - (enclose_area - union_area) / (enclose_area + 1e-8)
+    giou = iou - (enclose_area - union_area) / tf.maximum(enclose_area, 1e-8)
 
     return giou
 
@@ -76,7 +76,7 @@ def DIoU(y_pred_box, y_true_box):
     y_pred_box_area = y_pred_box_wh[..., 0] * y_pred_box_wh[..., 1]
     union_area = y_true_box_area + y_pred_box_area - intersect_area
     # calculate IoU, add epsilon in denominator to avoid dividing by 0
-    iou = intersect_area / (union_area + 1e-8)
+    iou = intersect_area / tf.maximum(union_area, 1e-8)
 
     # box center distance
     center_distance = tf.reduce_sum(tf.square(y_pred_box_center - y_true_box_center), axis=-1)
@@ -87,7 +87,7 @@ def DIoU(y_pred_box, y_true_box):
     # get enclosed diagonal distance
     enclose_diagonal = tf.reduce_sum(tf.square(enclose_wh), axis=-1)
     # calculate DIoU, add epsilon in denominator to avoid dividing by 0
-    diou = iou - center_distance / (enclose_diagonal + 1e-8)
+    diou = iou - center_distance / tf.maximum(enclose_diagonal, 1e-8)
 
     return diou
 
@@ -124,7 +124,7 @@ def CIoU(y_pred_box, y_true_box):
     y_pred_box_area = y_pred_box_wh[..., 0] * y_pred_box_wh[..., 1]
     union_area = y_true_box_area + y_pred_box_area - intersect_area
     # calculate IoU, add epsilon in denominator to avoid dividing by 0
-    iou = intersect_area / (union_area + 1e-8)
+    iou = intersect_area / tf.maximum(union_area, 1e-8)
 
     # box center distance
     center_distance = tf.reduce_sum(tf.square(y_pred_box_center - y_true_box_center), axis=-1)
@@ -135,7 +135,7 @@ def CIoU(y_pred_box, y_true_box):
     # get enclosed diagonal distance
     enclose_diagonal = tf.reduce_sum(tf.square(enclose_wh), axis=-1)
     # calculate DIoU, add epsilon in denominator to avoid dividing by 0
-    diou = iou - center_distance / (enclose_diagonal + 1e-8)
+    diou = iou - center_distance / tf.maximum(enclose_diagonal, 1e-8)
 
     # calculate param v and alpha to extend to CIoU
     constant = 4. / (math.pi * math.pi)
@@ -143,6 +143,6 @@ def CIoU(y_pred_box, y_true_box):
                                            y_true_box_wh[..., 1]) - tf.math.atan2(y_pred_box_wh[..., 0],
                                                                                   y_pred_box_wh[..., 1])
                              )
-    alpha = v / (1.0 - iou + v + 1e-8)
+    alpha = v / tf.maximum(1.0 - iou + v, 1e-8)
     ciou = diou - alpha * v
     return ciou

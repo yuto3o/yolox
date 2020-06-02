@@ -264,7 +264,7 @@ def _broadcast_iou(box_1, box_2):
     int_area = int_w * int_h
     box_1_area = (box_1[..., 2] - box_1[..., 0]) * (box_1[..., 3] - box_1[..., 1])
     box_2_area = (box_2[..., 2] - box_2[..., 0]) * (box_2[..., 3] - box_2[..., 1])
-    return int_area / (box_1_area + box_2_area - int_area + 1e-8)
+    return int_area / tf.maximum(box_1_area + box_2_area - int_area, 1e-8)
 
 
 def _yolo_boxes(y_pred, num_classes, anchors):
@@ -334,8 +334,7 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         weight = tf.squeeze(true_weight, -1)
         # ignore false positive when iou is over threshold
         best_iou = tf.map_fn(
-            lambda x: tf.reduce_max(_broadcast_iou(x[0], tf.boolean_mask(
-                x[1], tf.cast(x[2], tf.bool))), axis=-1),
+            lambda x: tf.reduce_max(_broadcast_iou(x[0], tf.boolean_mask(x[1], tf.cast(x[2], tf.bool))), axis=-1),
             (pred_box, true_box, obj_mask),
             dtype)
         ignore_mask = tf.cast(best_iou < ignore_thresh, dtype)
@@ -347,13 +346,13 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
             box_loss = xy_loss + wh_loss
         elif 'GIoU' in type:
             giou = GIoU(pred_box, true_box)
-            box_loss = 1 - giou
+            box_loss = 1. - giou
         elif 'DIoU' in type:
             diou = DIoU(pred_box, true_box)
-            box_loss = 1 - diou
+            box_loss = 1. - diou
         elif 'CIoU' in type:
             ciou = CIoU(pred_box, true_box)
-            box_loss = 1 - ciou
+            box_loss = 1. - ciou
         else:
             raise NotImplementedError('Loss Type', type, 'is Not Implemented!')
 

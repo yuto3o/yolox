@@ -249,3 +249,26 @@ def random_crop_and_zoom(image, bboxes, labels, size, jitter=0.3):
     labels = labels[~filter_b]
 
     return image, bboxes, labels
+
+
+def bbox_filter(image, bboxes, labels, weights):
+    """
+    Maginot Line
+    """
+
+    h, w, _ = image.shape
+
+    x1 = np.maximum(bboxes[..., 0], 0.)
+    y1 = np.maximum(bboxes[..., 1], 0.)
+    x2 = np.minimum(bboxes[..., 2], w)
+    y2 = np.minimum(bboxes[..., 3], h)
+
+    int_w = np.maximum(x2 - x1, 0)
+    int_h = np.maximum(y2 - y1, 0)
+    int_area = int_w * int_h
+
+    bboxes = np.stack([x1, y1, x2, y2], axis=-1)
+    # keep_idx = np.any(np.not_equal(bboxes, 0), axis=-1)
+    keep_idx = int_area > 0.
+
+    return image, bboxes[keep_idx], labels[keep_idx], weights[keep_idx]

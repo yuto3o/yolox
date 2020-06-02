@@ -22,7 +22,7 @@ train:
   mix_up: false
   cut_mix: false
   mosaic: false
-  label_smoothing: false
+  label_smoothing: true
   normal_method: true
 
   ignore_threshold: 0.5
