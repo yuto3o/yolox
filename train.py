@@ -68,7 +68,7 @@ def main(_argv):
                              time.strftime("%Y%m%d%H%M", time.localtime()))
 
     warmup_epochs = 3
-    warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=warmup_epochs * len(train_dataset), verbose=1)]
+    warmup_callback = [WarmUpScheduler(learning_rate=5e-4, warmup_step=warmup_epochs * len(train_dataset), verbose=1)]
 
     eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
                                         eval_model=eval_model,
@@ -76,12 +76,14 @@ def main(_argv):
                                         sample_rate=10,
                                         verbose=1)
                      ]
-    lr_callback = [CosineAnnealingScheduler(learning_rate=1e-3,
+    lr_callback = [CosineAnnealingScheduler(learning_rate=5e-4,
                                             eta_min=1e-6,
                                             T_max=epochs * len(train_dataset),
                                             verbose=1)]
 
-
+    if not os.path.isdir(ckpt_path):
+        os.makedirs(ckpt_path)
+        os.makedirs(os.path.join(ckpt_path, 'train', 'plugins', 'profile'))
 
     # warm-up
     for i in range(num): model.layers[i].trainable = False
@@ -95,8 +97,8 @@ def main(_argv):
               callbacks=warmup_callback
               )
 
-    for i in range(len(model.layers)): model.layers[i].trainable = True
-    print('Unfreeze all layers.')
+    # for i in range(len(model.layers)): model.layers[i].trainable = True
+    # print('Unfreeze all layers.')
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),

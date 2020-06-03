@@ -1,3 +1,5 @@
+
+
 # More Than YOLO
 
 TensorFlow & Keras Implementations & Python
@@ -183,13 +185,15 @@ cv2.waitKey()
 
 ## 2. Train
 
-!!! Please Read the abve guide (1.1, 1.2).
+!!! Please Read the above guide (e.g. 1.1, 1.2).
 
 ```shell
 python train.py --config=./cfgs/voc_yolov4.yaml
 ```
 
 ## 3. Experiment
+
+### 3.1 Speed
 
 **i7-9700F+16GB**
 
@@ -209,7 +213,9 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | YOLOv4      | 61 ms   |         |         |
 | YOLOv4-tiny | 29 ms   |         |         |
 
-We freeze backbone for the first 30 epoches (lr=1e-4), and then finetune  all of the trainable variables for another 50 epoches (lr=1e-5), and final 10 epoches for evaluation(lr=1e-6).
+### 3.2 Logs
+
+**Augmentations**
 
 | Name                    | Abbr |
 | ----------------------- | ---- |
@@ -265,6 +271,12 @@ Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
 | ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
 | ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
 | ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+
+### 3.3 Details
+
+For tiny version, we freeze backbone for the first 30 epoches (lr=1e-4), and then finetune  all of the trainable variables for another 50 epoches (lr=1e-5).
+
+For common version, we freeze backbone and do warm-up training (to 5e-4) for first 3 epoches, and then train all variables with cosine annealing learning rate (lr from 5e-4 to 1e-6) for 180 epoches.
 
 ## 4. Reference
 
