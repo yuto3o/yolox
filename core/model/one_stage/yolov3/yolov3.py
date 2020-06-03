@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import tensorflow as tf
 
 from core.losses.iou import GIoU, DIoU, CIoU

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 def decode_name(name_path):
     with open(name_path, 'r') as f:
         lines = f.readlines()
@@ -72,7 +73,7 @@ def decode_line_y_true(line):
         if not item:
             continue
         x1, y1, x2, y2, label = item.split(',')
-        x1, y1, x2, y2, label = int(x1), int(y1), int(x2), int(y2), int(label)
+        x1, y1, x2, y2, label = float(x1), float(y1), float(x2), float(y2), float(label)
         bboxes.append([x1, y1, x2, y2])
         labels.append(label)
 

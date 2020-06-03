@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##################################################################################
 # Codes come from
 # https://github.com/hunglc007/tensorflow-yolov4-tflite/blob/master/core/utils.py

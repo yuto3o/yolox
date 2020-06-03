@@ -1,15 +1,4 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
-'''
-@File    :   detector.py
-@Contact :   yuyang@wondertek.com.cn
-@License :   (C)Copyright 2020
-
-@Modify Time        @Author    @Version    @Desciption
-----------------    -------    --------    -----------
-2020-05-28 15:00    yuyang     1.0         None
-'''
-# THIS FILE IS PART OF MTYOLO PROJECT
+# -*- coding: utf-8 -*-
 
 from absl import app, flags
 from core.utils import decode_cfg, load_weights

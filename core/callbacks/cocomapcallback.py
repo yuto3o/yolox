@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import tensorflow as tf
 
 from core.metrics import COCOeval
@@ -11,12 +12,14 @@ class COCOEvalCheckpoint(tf.keras.callbacks.Callback):
                  eval_model,
                  model_cfg,
                  sample_rate,
+                 only_save_weight=True,
                  verbose=0):
         super(COCOEvalCheckpoint, self).__init__()
         self.save_path = save_path
         self.eval_model = eval_model
         self.model_cfg = model_cfg
 
+        self.only_save_weight = only_save_weight
         self.verbose = verbose
         self.sample_rate = sample_rate
 
@@ -45,8 +48,10 @@ class COCOEvalCheckpoint(tf.keras.callbacks.Callback):
                 if self.verbose > 0:
                     print(
                         "mAP improved from {:.2%} to {:.2%}, saving model to {}".format(self._best_mAP, mAP, save_path))
-
-                self.eval_model.save_weights(save_path)
+                if self.only_save_weight:
+                    self.eval_model.save_weights(save_path)
+                else:
+                    self.eval_model.save(save_path)
             self._best_mAP = mAP
         else:
             if self.verbose > 0:
