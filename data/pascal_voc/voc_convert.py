@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import xml.etree.ElementTree as ET
 
@@ -74,7 +75,7 @@ def convert(voc_path, voc_name_path, txt_output_path, use_difficult=False):
         x1, y1, x2, y2, w, h = int(sx1), int(sy1), int(sx2), int(sy2), int(sw), int(sh)
 
         if x1 < 1 or x2 < 1 or x1 > w or x2 > w or y1 < 1 or y2 < 1 or y1 > h or y2 > h:
-            logging.warning('cross boundary (' + sw + ',' + sh + '),'.join([sx1, sy1, sx2, sy2]))
+            logging.warning('cross boundary (' + str(w) + ',' + str(h) + '),(' + ','.join([str(x1), str(y1), str(x2), str(y2)]) + ')')
 
             return str(min(max(x1, 0), w)), str(min(max(y1, 0), h)), str(min(max(x2, 0), w)), str(min(max(y2, 0), h))
 

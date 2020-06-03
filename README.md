@@ -26,6 +26,7 @@ This repository have done:
 - [x] YOLOv3 Head
 - [x] Keras Callbacks for Online Evaluation
 - [x] Load Official Weight File
+- [x] Data Format Converter(COCO and Pascal VOC)
 - [x] K-Means for Anchors
 - [x] Fight with 'NaN'
 - [x] Train (Strategy and Model Config)
@@ -63,7 +64,7 @@ path/to/image2 x1,y1,x2,y2,label
 ...
 ```
 
-Convert your data format firstly. We present a script for Pascal VOC in https://github.com/yuto3o/yolox/blob/master/data/pascal_voc/voc_convert.py
+Convert your data format firstly. We present [a script for Pascal VOC](./data/pascal_voc/voc_convert.py) and [a script for COCO](./data/coco/coco_convert.py).
 
 More details and a simple dataset could be got from https://github.com/YunYang1994/yymnist.
 

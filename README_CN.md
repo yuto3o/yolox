@@ -14,7 +14,7 @@ YOLOv4-tiny（YOLOv4未提出，非官方）
 
 ## 被训练支配的恐惧 !
 
-- 因为目前可用的卡是一张游戏卡RzaiTX 2070S(8 G)，因此在训练时使用了较小的batch size。
+- 因为目前可用的卡是一张游戏卡RzaiTX 2070S(8 G)，因此在训练时使用了较小的batch，实际中尽量大batch可以省很多事。
 - 本项目的数据增强均使用在线形式，高级的数据增强方式会大大拖慢训练速度。
 - 训练过程中，Tiny版问题不大，而完整版模型容易NaN或者收敛慢，还在调参中。
 
@@ -26,6 +26,7 @@ This repository have done:
 - [x] YOLOv3 Head
 - [x] Keras Callbacks for Online Evaluation
 - [x] Load Official Weight File
+- [x] Data Format Converter(COCO and Pascal VOC)
 - [x] K-Means for Anchors
 - [x] Fight with 'NaN'
 - [x] Train (Strategy and Model Config)
@@ -63,7 +64,7 @@ path/to/image2 x1,y1,x2,y2,label
 ...
 ```
 
-当然本项目也提供了一个简单的VOC格式[转换脚本](./data/pascal_voc/voc_convert.py)。
+当然本项目也提供了一个的[VOC格式转换脚本](./data/pascal_voc/voc_convert.py)和一个[COCO格式转换脚本](./data/coco/coco_convert.py)。
 
 也可以从其他大佬的项目中看到这种格式的运用，甚至可以得到一个简单的入门级目标检测数据集： https://github.com/YunYang1994/yymnist.
 
