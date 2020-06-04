@@ -2,6 +2,8 @@
 
 # More Than YOLO
 
+English | [中文](./README_CN.md)
+
 TensorFlow & Keras Implementations & Python
 
 YOLOv3, YOLOv3-tiny, YOLOv4
@@ -14,7 +16,7 @@ YOLOv4-tiny(unofficial)
 
 ## News !
 
-- Small batch size is used, because available GPU (8G) has small memory. 
+- Small batch size is used, because available GPU (8G) has small memory.  Please use big batch size as possible.
 - Online High Level augmentation will slow down training speed.
 - When I tried to train yolov3 or yolov4, 'NaN' problem made me crazy.
 
@@ -227,6 +229,8 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | Mix Up                  | MU   |
 | Cut Mix                 | CM   |
 | Mosaic                  | M    |
+| Warm-up LR              | W    |
+| Cosine Annealing LR     | CA   |
 
 Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3), Grayscale, Distort, Rotate(angle=7).
 
@@ -275,9 +279,25 @@ Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
 
 ### 3.3 Details
 
-For tiny version, we freeze backbone for the first 30 epoches (lr=1e-4), and then finetune  all of the trainable variables for another 50 epoches (lr=1e-5).
+#### Tiny Version
 
-For common version, we freeze backbone and do warm-up training (to 5e-4) for first 3 epoches, and then train all variables with cosine annealing learning rate (lr from 5e-4 to 1e-6) for 180 epoches.
+| Stage | Freeze Backbone | LR   | Epoch |
+| ----- | --------------- | ---- | ----- |
+| 1     | Yes             | 1e-4 | 30    |
+| 2     | No              | 1e-5 | 50    |
+
+#### Common Version
+
+| Stage | Freeze Backbone | LR                   | Epoch |
+| ----- | --------------- | -------------------- | ----- |
+| 1     | Yes             | 5e-4 (w/ W)          | 3     |
+| 2     | Yes             | 5e-4 to 1e-6 (w/ CA) | 180   |
+
+Continue finetuning ...
+
+| Stage | Freeze Backbone | LR                   | Epoch |
+| ----- | --------------- | -------------------- | ----- |
+| 1     | No              | 1e-3 to 1e-6 (w/ CA) | 180   |
 
 ## 4. Reference
 

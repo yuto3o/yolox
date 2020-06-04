@@ -12,8 +12,8 @@ from absl import app, flags, logging
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.experimental import tensorrt as trt
 
-flags.DEFINE_string('weights', './checkpoints/yolov4-416', 'path to weights file')
-flags.DEFINE_string('output', './checkpoints/yolov4-trt-fp16-416', 'path to output')
+flags.DEFINE_string('weights', None, 'path to weights file')
+flags.DEFINE_string('output', None, 'path to output')
 flags.DEFINE_integer('input_size', 416, 'path to output')
 flags.DEFINE_string('quantize_mode', 'float16', 'quantize mode (int8, float16)')
 flags.DEFINE_string('dataset', "./coco_dataset/coco/5k.txt", 'path to dataset')

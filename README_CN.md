@@ -1,5 +1,3 @@
-
-
 # More Than YOLO
 
 TensorFlow & Keras Implementations & Python
@@ -33,7 +31,7 @@ This repository have done:
   - Define simple training in [train.py](./train.py)
   - Use YAML as config file in [cfgs](./cfgs)
   - [x] Cosine Annealing LR
-  - [x] Warm-up
+  - [x] Warm-up LR
 - [ ] Data Augmentation
   - [x] Standard Method: Random Flip, Random Crop, Zoom, Random Grayscale, Random Distort, Rotate
   - [x] Hight Level: Cut Mix, Mix Up, Mosaic （These Online Augmentations is Slow）
@@ -48,7 +46,7 @@ This repository have done:
 
 [toc]
 
-## 0. 在提问前直接先看源码可更好帮助理解
+## 0. 在提问前直接看源码可更好帮助理解
 
 相关的darknet权重可从官方渠道获取： https://github.com/AlexeyAB/darknet/releases 或者 https://pjreddie.com/darknet/yolo/.
 
@@ -221,12 +219,14 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | Name                    | Abbr |
 | ----------------------- | ---- |
 | Standard Method         | SM   |
-| Dynamic mini batch size | DM   |
+| Dynamic Mini Batch Size | DM   |
 | Label Smoothing         | LS   |
 | Focal Loss              | FL   |
 | Mix Up                  | MU   |
 | Cut Mix                 | CM   |
 | Mosaic                  | M    |
+| Warm-up LR              | W    |
+| Cosine Annealing LR     | CA   |
 
 Standard Method Package 包括 Flip left and right,  Crop and Zoom(jitter=0.3), Grayscale, Distort, Rotate(angle=7).
 
@@ -275,9 +275,25 @@ Standard Method Package 包括 Flip left and right,  Crop and Zoom(jitter=0.3), 
 
 ### 3.3 训练细节
 
-针对于Tiny版本， 实验使用了预训练的YOLOv3-Tiny权重（因为v3与v4主干参数结构上基本是一致的），在冻结了主干参数并保持学习率为1e-4情况下先训练了30轮，接着解冻所有参数并又使用1e-5的学习率训练另外的50轮。 
+#### Tiny Version
 
-大模型的训练还在进行中，暂定完全冻结主干部分，先使用warm-up策略训练3轮，再使用余弦退火策略训练另外180轮，初始学习率为5e-4，终止学习率为1e-6。
+| Stage | Freeze Backbone | LR   | Epoch |
+| ----- | --------------- | ---- | ----- |
+| 1     | Yes             | 1e-4 | 30    |
+| 2     | No              | 1e-5 | 50    |
+
+#### Common Version
+
+| Stage | Freeze Backbone | LR                   | Epoch |
+| ----- | --------------- | -------------------- | ----- |
+| 1     | Yes             | 5e-4 (w/ W)          | 3     |
+| 2     | Yes             | 5e-4 to 1e-6 (w/ CA) | 180   |
+
+至此，得到了一个新的点数尚佳的起始模型，继续训练。
+
+| Stage | Freeze Backbone | LR   | Epoch |
+| ----- | --------------- | ---- | ----- |
+| 1     | No              | 1e-6 | 180   |
 
 ## 4. Reference
 
