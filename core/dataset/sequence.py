@@ -63,18 +63,17 @@ class Dataset(Sequence):
             weights = np.full(len(labels), 1.)
 
             # high level augment
+            # if self.mix_up and np.random.randint(2):
+            #     sub_idx2 = np.random.choice(np.delete(np.arange(self.num_anno), sub_idx))
+            #     image2, bboxes2, labels2 = self._getitem(sub_idx2)
+            #     image, bboxes, labels, weights = augment.mix_up(image, bboxes, labels, image2, bboxes2, labels2)
+            #
+            # elif self.cut_mix and np.random.randint(2):
+            #     sub_idx2 = np.random.choice(np.delete(np.arange(self.num_anno), sub_idx))
+            #     image2, bboxes2, labels2 = self._getitem(sub_idx2)
+            #     image, bboxes, labels, weights = augment.cut_mix(image, bboxes, labels, image2, bboxes2, labels2)
 
-            if self.mix_up and np.random.randint(2):
-                sub_idx2 = np.random.choice(np.delete(np.arange(self.num_anno), sub_idx))
-                image2, bboxes2, labels2 = self._getitem(sub_idx2)
-                image, bboxes, labels, weights = augment.mix_up(image, bboxes, labels, image2, bboxes2, labels2)
-
-            elif self.cut_mix and np.random.randint(2):
-                sub_idx2 = np.random.choice(np.delete(np.arange(self.num_anno), sub_idx))
-                image2, bboxes2, labels2 = self._getitem(sub_idx2)
-                image, bboxes, labels, weights = augment.cut_mix(image, bboxes, labels, image2, bboxes2, labels2)
-
-            elif self.mosaic and np.random.randint(2):
+            if self.mosaic:
                 sub_idx = np.random.choice(np.delete(np.arange(self.num_anno), idx), 3, False)
                 image2, bboxes2, labels2 = self._getitem(sub_idx[0])
                 image3, bboxes3, labels3 = self._getitem(sub_idx[1])
@@ -83,6 +82,13 @@ class Dataset(Sequence):
                                                                image2, bboxes2, labels2,
                                                                image3, bboxes3, labels3,
                                                                image4, bboxes4, labels4)
+            if self.normal_method:
+                image = augment.random_distort(image)
+                image = augment.random_grayscale(image)
+                image, bboxes = augment.random_flip_lr(image, bboxes)
+                image, bboxes = augment.random_rotate(image, bboxes)
+                image, bboxes, labels, weights = augment.random_crop_and_zoom(image, bboxes, labels, weights,
+                                                                              (self._image_size, self._image_size))
 
             image, bboxes, labels, weights = augment.bbox_filter(image, bboxes, labels, weights)
 
@@ -102,17 +108,7 @@ class Dataset(Sequence):
         image = read_image(path)
         bboxes, labels = np.array(bboxes), np.array(labels)
 
-        if self.normal_method:
-            image = augment.random_distort(image)
-            image = augment.random_grayscale(image)
-            image, bboxes = augment.random_flip_lr(image, bboxes)
-            image, bboxes = augment.random_rotate(image, bboxes)
-            image, bboxes, labels = augment.random_crop_and_zoom(image, bboxes, labels,
-                                                                 (self._image_size, self._image_size))
-        else:
-
-            image, bboxes = preprocess_image(image, (self._image_size, self._image_size), bboxes)
-
+        image, bboxes = preprocess_image(image, (self._image_size, self._image_size), bboxes)
         labels = augment.onehot(labels, self.num_classes, self.label_smoothing)
 
         return image, bboxes, labels
