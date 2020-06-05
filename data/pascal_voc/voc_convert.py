@@ -79,7 +79,7 @@ def convert(voc_path, voc_name_path, txt_output_path, use_difficult=False):
 
             return str(min(max(x1, 0), w)), str(min(max(y1, 0), h)), str(min(max(x2, 0), w)), str(min(max(y2, 0), h))
 
-        return str(x1), str(y1), str(x2), str(y2)
+        return str(x1-1), str(y1-1), str(x2-1), str(y2-1)
 
     def _write_to_text(img_paths, ann_paths, txt_path):
         with open(txt_path, 'w') as f:
