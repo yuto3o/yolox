@@ -6,8 +6,10 @@ import cv2
 def read_image(*args, **kwargs):
     return cv2.cvtColor(cv2.imread(*args, **kwargs), cv2.COLOR_BGR2RGB)
 
+
 def read_video(*args, **kwargs):
     return cv2.VideoCapture(*args, **kwargs)
+
 
 def preprocess_image_inv(image, size, bboxes=None):
     """

@@ -21,17 +21,17 @@ class CosineAnnealingScheduler(tf.keras.callbacks.Callback):
 
     def on_batch_end(self, batch, logs=None):
         self.global_step = self.global_step + 1
-        lr = tf.keras.backend.get_value(self.model.optimizer.lr)
-        self.learning_rates.append(lr)
+        learning_rate = tf.keras.backend.get_value(self.model.optimizer.learning_rate)
+        self.learning_rates.append(learning_rate)
 
     def on_epoch_begin(self, epoch, logs=None):
         if self.verbose > 0:
-            print('\nEpoch %s: current learning rate to %s.' % (epoch + 1, self.model.optimizer.lr.numpy()))
+            print('\nEpoch %s: current learning rate to %s.' % (epoch + 1, self.model.optimizer.learning_rate.numpy()))
 
     def on_batch_begin(self, batch, logs=None):
         learning_rate = self.eta_min + 0.5 * (self.eta_max - self.eta_min) * (
                 1 + np.cos(np.pi * (self.global_step % self.T_max) / self.T_max))
-        tf.keras.backend.set_value(self.model.optimizer.lr, learning_rate)
+        tf.keras.backend.set_value(self.model.optimizer.learning_rate, learning_rate)
 
 
 class WarmUpScheduler(tf.keras.callbacks.Callback):
@@ -66,18 +66,16 @@ class WarmUpScheduler(tf.keras.callbacks.Callback):
 
     def on_batch_end(self, batch, logs=None):
         self.global_step = self.global_step + 1
-        lr = tf.keras.backend.get_value(self.model.optimizer.lr)
-        self.learning_rates.append(lr)
+        learning_rate = tf.keras.backend.get_value(self.model.optimizer.learning_rate)
+        self.learning_rates.append(learning_rate)
 
     def on_epoch_begin(self, epoch, logs=None):
         if self.verbose > 0:
-            print('\nEpoch %s: current learning rate to %s.' % (epoch + 1, self.model.optimizer.lr.numpy()))
+            print('\nEpoch %s: current learning rate to %s.' % (epoch + 1, self.model.optimizer.learning_rate.numpy()))
 
     def on_batch_begin(self, batch, logs=None):
         slope = (self.learning_rate - self.learning_rate_init) / self.warmup_step
         warmup_rate = slope * self.global_step + self.learning_rate_init
         learning_rate = np.where(self.global_step < self.warmup_step, warmup_rate,
                                  self.learning_rate)
-        tf.keras.backend.set_value(self.model.optimizer.lr, learning_rate)
-
-        # print('\nBatch %s: current learning rate to %s.' % (batch + 1, self.model.optimizer.lr.numpy()))
+        tf.keras.backend.set_value(self.model.optimizer.learning_rate, learning_rate)

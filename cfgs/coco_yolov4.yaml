@@ -10,7 +10,7 @@ yolo:
 train:
   label: "coco_yolov4"
   name_path: "./data/coco/coco.name"
-  anno_path: "./data/coco/train.txt"
+  anno_path: "./data/coco/train2017.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
   batch_size: 4
@@ -22,13 +22,13 @@ train:
   mix_up: false
   cut_mix: false
   mosaic: false
-  label_smoothing: false
+  label_smoothing: true
   normal_method: true
 
   ignore_threshold: 0.7
 
 test:
-  anno_path: "./data/coco/test.txt"
-  image_size: "416"
+  anno_path: "./data/coco/val2017.txt"
+  image_size: "512"
   batch_size: 1
   init_weight_path: "./ckpts/yolov4.weights"

@@ -19,6 +19,7 @@ YOLOv4-tiny(unofficial)
 - Small batch size is used, because available GPU (8G) has small memory.  Please use big batch size as possible.
 - Online High Level augmentation will slow down training speed.
 - When I tried to train yolov3 or yolov4, 'NaN' problem made me crazy.
+- Support AccumOptimizer, Similar to  'subdivisions' in darknet.
 
 ---
 
@@ -36,6 +37,7 @@ This repository have done:
   - Use YAML as config file in [cfgs](./cfgs)
   - [x] Cosine Annealing LR
   - [x] Warm-up
+  - [x] AccumOptimizer
 - [ ] Data Augmentation
   - [x] Standard Method: Random Flip, Random Crop, Zoom, Random Grayscale, Random Distort, Rotate
   - [x] Hight Level: Cut Mix, Mix Up, Mosaic （These Online Augmentations is Slow）

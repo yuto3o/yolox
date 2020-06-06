@@ -126,7 +126,7 @@ def YOLOv4_Tiny(cfg,
 
     model = tf.keras.Model(inputs, [output_0, output_1], name=name)
 
-    outputs = YOLOHeader(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
+    outputs = Header(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
         (output_0, output_1))
 
     eval_model = tf.keras.Model(inputs, outputs, name=name)
@@ -229,7 +229,7 @@ def YOLOv4(cfg,
 
     model = tf.keras.Model(inputs, [output_0, output_1, output_2], name=name)
 
-    outputs = YOLOHeader(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
+    outputs = Header(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
         (output_0, output_1, output_2))
     eval_model = tf.keras.Model(inputs, outputs, name=name)
 
@@ -272,7 +272,7 @@ class PreprocessInput(tf.keras.layers.Layer):
         return input_shape
 
 
-class YOLOHeader(tf.keras.layers.Layer):
+class Header(tf.keras.layers.Layer):
 
     def __init__(self, num_classes, anchors, mask, strides,
                  max_outputs, iou_threshold, score_threshold, **kwargs):
@@ -284,10 +284,10 @@ class YOLOHeader(tf.keras.layers.Layer):
         self.max_outputs = max_outputs
         self.iou_threshold = iou_threshold
         self.score_threshold = score_threshold
-        super(YOLOHeader, self).__init__(**kwargs)
+        super(Header, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        super(YOLOHeader, self).build(input_shape)  # Be sure to call this at the end
+        super(Header, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, inputs, **kwargs):
         boxes, objects, classes = [], [], []

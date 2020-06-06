@@ -29,8 +29,6 @@ class COCOEvalCheckpoint(tf.keras.callbacks.Callback):
         self.name_path = self.model_cfg['train']['name_path']
         self.test_path = self.model_cfg['test']['anno_path']
 
-        self.train_path = self.model_cfg['train']['anno_path']
-
     def on_epoch_end(self, epoch, logs=None):
 
         if epoch % self.sample_rate != self.sample_rate - 1:

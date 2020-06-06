@@ -12,9 +12,10 @@ YOLOv4-tiny（YOLOv4未提出，非官方）
 
 ## 被训练支配的恐惧 !
 
-- 因为目前可用的卡是一张游戏卡RzaiTX 2070S(8 G)，因此在训练时使用了较小的batch，实际中尽量大batch可以省很多事。
+- 因为目前可用的卡是一张游戏卡RTX 2070S(8 G)，因此在训练时使用了较小的batch，实际中尽量大batch可以省很多事。
 - 本项目的数据增强均使用在线形式，高级的数据增强方式会大大拖慢训练速度。
 - 训练过程中，Tiny版问题不大，而完整版模型容易NaN或者收敛慢，还在调参中。
+- 增加了支持累计梯度的Adam优化器，类似darknet中subdivisions参数的作用。
 
 ---
 
@@ -32,6 +33,7 @@ This repository have done:
   - Use YAML as config file in [cfgs](./cfgs)
   - [x] Cosine Annealing LR
   - [x] Warm-up LR
+  - [x] AccumOptimizer
 - [ ] Data Augmentation
   - [x] Standard Method: Random Flip, Random Crop, Zoom, Random Grayscale, Random Distort, Rotate
   - [x] Hight Level: Cut Mix, Mix Up, Mosaic （These Online Augmentations is Slow）
