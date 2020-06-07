@@ -1,7 +1,7 @@
 yolo:
   type: "yolov4"
   iou_threshold: 0.45
-  score_threshold: 0.5
+  score_threshold: 0.3
   max_boxes: 100
   strides: "32,16,8"
   anchors: "12,16 19,36 40,28 36,75 76,55 72,146 142,110 192,243 459,401"

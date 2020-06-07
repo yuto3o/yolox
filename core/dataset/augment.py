@@ -209,28 +209,29 @@ def random_rotate(image, bboxes, angle=7.):
     m = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1)
     image = cv2.warpAffine(image, m, (w, h), borderValue=(127, 127, 127))
 
-    top_left = bboxes[..., [0, 1]]
-    top_right = bboxes[..., [2, 1]]
-    bottom_left = bboxes[..., [0, 3]]
-    bottom_right = bboxes[..., [2, 3]]
+    if len(bboxes) !=0 :
+        top_left = bboxes[..., [0, 1]]
+        top_right = bboxes[..., [2, 1]]
+        bottom_left = bboxes[..., [0, 3]]
+        bottom_right = bboxes[..., [2, 3]]
 
-    # N, 4, 2
-    points = np.stack([top_left, top_right, bottom_left, bottom_right], axis=-2)
-    points_3d = np.ones(points.shape[:-1] + (3,), np.float32)
-    points_3d[..., :2] = points
+        # N, 4, 2
+        points = np.stack([top_left, top_right, bottom_left, bottom_right], axis=-2)
+        points_3d = np.ones(points.shape[:-1] + (3,), np.float32)
+        points_3d[..., :2] = points
 
-    # points = m @ points_3d[0].T
-    points = map(lambda x: m @ x.T, points_3d)
-    points = np.array(list(points))
-    points = np.transpose(points, [0, 2, 1])
+        # points = m @ points_3d[0].T
+        points = map(lambda x: m @ x.T, points_3d)
+        points = np.array(list(points))
+        points = np.transpose(points, [0, 2, 1])
 
-    bboxes[..., 0] = np.min(points[..., 0], axis=-1)
-    bboxes[..., 1] = np.min(points[..., 1], axis=-1)
-    bboxes[..., 2] = np.max(points[..., 0], axis=-1)
-    bboxes[..., 3] = np.max(points[..., 1], axis=-1)
+        bboxes[..., 0] = np.min(points[..., 0], axis=-1)
+        bboxes[..., 1] = np.min(points[..., 1], axis=-1)
+        bboxes[..., 2] = np.max(points[..., 0], axis=-1)
+        bboxes[..., 3] = np.max(points[..., 1], axis=-1)
 
-    bboxes[:, [0, 2]] = np.clip(bboxes[:, [0, 2]], 0, w)
-    bboxes[:, [1, 3]] = np.clip(bboxes[:, [1, 3]], 0, h)
+        bboxes[:, [0, 2]] = np.clip(bboxes[:, [0, 2]], 0, w)
+        bboxes[:, [1, 3]] = np.clip(bboxes[:, [1, 3]], 0, h)
 
     return image, bboxes
 

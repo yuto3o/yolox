@@ -155,18 +155,20 @@ def VOCeval(y_true_path,
 
         ans[names[classname_idx]] = {'rec': rec, 'prec': prec, 'ap': ap}
 
+    if verbose > 0:
+        print("\nOn Test Data")
+        print("class          |AP@50")
+
+    mAP = []
+    for key in ans.keys():
+        ap = ans[key]['ap']
+        mAP.append(ap)
+
         if verbose > 0:
-            print("\nOn Test Data")
-            print("class          |AP@50")
+            print("{:>15}|{:>15.2%}".format(key, ap))
 
-        for key in ans.keys():
-            ap = ans[key]
-
-            if verbose > 0:
-                print("{:>15}|{:>15.2%}".format(key, ap))
-
-        mAP = np.mean(list(ans.values()))
-        if verbose > 0:
-            print("{:>15}|{:>15.2%}".format('mAP', mAP))
+    mAP = np.mean(mAP)
+    if verbose > 0:
+        print("{:>15}|{:>15.2%}".format('mAP', mAP))
 
     return ans

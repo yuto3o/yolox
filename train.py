@@ -87,7 +87,7 @@ def main(_argv):
         os.makedirs(ckpt_path)
         os.makedirs(os.path.join(ckpt_path, 'train', 'plugins', 'profile'))
 
-    opt = Accumulative(optimizers.Adam(lr=0.), 32)
+    opt = Accumulative(optimizers.Adam(lr=0.), 8)
     # warm-up
     for i in range(num): model.layers[i].trainable = False
     print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
@@ -99,8 +99,8 @@ def main(_argv):
               callbacks=warmup_callback
               )
 
-    for i in range(len(model.layers)): model.layers[i].trainable = True
-    print('Unfreeze all layers.')
+    # for i in range(len(model.layers)): model.layers[i].trainable = True
+    # print('Unfreeze all layers.')
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),

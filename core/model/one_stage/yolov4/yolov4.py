@@ -311,8 +311,8 @@ class Header(tf.keras.layers.Layer):
             box_xy = (box_xy + tf.cast(grid, dtype)) / tf.cast([grid_w, grid_h], dtype)
             box_wh = tf.exp(box_wh) * tf.cast(anchors, dtype)
 
-            box_x1y1 = box_xy - box_wh / 2
-            box_x2y2 = box_xy + box_wh / 2
+            box_x1y1 = box_xy - box_wh / 2.
+            box_x2y2 = box_xy + box_wh / 2.
             box = tf.concat([box_x1y1, box_x2y2], axis=-1)
 
             boxes.append(tf.reshape(box, (x_shape[0], -1, 1, 4)))

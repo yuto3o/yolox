@@ -106,7 +106,11 @@ class Dataset(Sequence):
     def _getitem(self, sub_idx):
         path, bboxes, labels = self.annotation[sub_idx]
         image = read_image(path)
-        bboxes, labels = np.array(bboxes), np.array(labels)
+
+        if len(bboxes) != 0:
+            bboxes, labels = np.array(bboxes), np.array(labels)
+        else:
+            bboxes, labels = np.zeros((0, 4)), np.zeros((0,))
 
         image, bboxes = preprocess_image(image, (self._image_size, self._image_size), bboxes)
         labels = augment.onehot(labels, self.num_classes, self.label_smoothing)
