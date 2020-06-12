@@ -2,15 +2,15 @@ yolo:
   type: "yolov4_tiny"
   iou_threshold: 0.5
   score_threshold: 0.005
-  max_boxes: 100
+  max_boxes: 3
   strides: "32,16"
-  anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
+  anchors: "38,16 57,25 68,53 81,34 96,81 125,57"
   mask: "3,4,5 0,1,2"
 
 train:
-  label: "voc_yolov4_tiny_SM_DM_CIoU_FL"
-  name_path: "./data/pascal_voc/voc.name"
-  anno_path: "./data/pascal_voc/train.txt"
+  label: "ccpd_yolov4_tiny_SM_DM_CIoU"
+  name_path: "./data/ccpd/ccpd.name"
+  anno_path: "./data/ccpd/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
   batch_size: 4
@@ -28,7 +28,7 @@ train:
   ignore_threshold: 0.5
 
 test:
-  anno_path: "./data/pascal_voc/test.txt"
+  anno_path: "./data/ccpd/test.txt"
   image_size: "416"
   batch_size: 1
   init_weight_path: ""

@@ -209,7 +209,7 @@ def random_rotate(image, bboxes, angle=7.):
     m = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1)
     image = cv2.warpAffine(image, m, (w, h), borderValue=(127, 127, 127))
 
-    if len(bboxes) !=0 :
+    if len(bboxes) != 0:
         top_left = bboxes[..., [0, 1]]
         top_right = bboxes[..., [2, 1]]
         bottom_left = bboxes[..., [0, 3]]

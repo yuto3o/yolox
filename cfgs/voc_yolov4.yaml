@@ -1,7 +1,7 @@
 yolo:
   type: "yolov4"
-  iou_threshold: 0.45
-  score_threshold: 0.3
+  iou_threshold: 0.5
+  score_threshold: 0.005
   max_boxes: 100
   strides: "32,16,8"
   anchors: "12,16 19,36 40,28 36,75 76,55 72,146 142,110 192,243 459,401"
@@ -13,8 +13,8 @@ train:
   anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
-  batch_size: 8
-  init_weight_path: "./ckpts/tmp/voc_yolov4_NM_LS_CIoU_FL/202006030743/mAP-0.2472.h5" #"./ckpts/yolov4.h5"
+  batch_size: 2
+  init_weight_path: "./ckpts/tmp/voc_yolov4_NM_LS_CIoU_FL/202006061601/mAP-0.3989.h5" #"./ckpts/yolov4.h5"
   save_weight_path: "./ckpts"
 
   loss_type: "CIoU+FL"
@@ -31,4 +31,4 @@ test:
   anno_path: "./data/pascal_voc/test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: ""
+  init_weight_path: "./ckpts/tmp/voc_yolov4_NM_LS_CIoU_FL/202006061601/mAP-0.3989.h5"

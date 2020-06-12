@@ -20,6 +20,7 @@ YOLOv4-tiny(unofficial)
 - Online High Level augmentation will slow down training speed.
 - When I tried to train yolov3 or yolov4, 'NaN' problem made me crazy.
 - Support AccumOptimizer, Similar to  'subdivisions' in darknet.
+- When I tried to train yolov3 or yolov4, I found that if I set weight decay to 5e-4，the result is unsatisfactory; if I set it to 0, everything is OK.
 
 ---
 
@@ -147,7 +148,7 @@ python detector.py --config=./cfgs/coco_yolov4.yaml --media=./misc/street.mp4 --
 ```python
 from core.utils import decode_cfg, load_weights
 from core.model.one_stage.yolov4 import YOLOv4
-from core.image import draw_bboxes, preprocess_image, preprocess_image_inv, read_image, Shader
+from core.image import draw_bboxes, preprocess_image, postprocess_image, read_image, Shader
 
 import numpy as np
 import cv2
@@ -180,7 +181,7 @@ valid_score = scores[0][:valid_detections[0]]
 valid_cls = classes[0][:valid_detections[0]]
 
 valid_boxes *= 512
-img, valid_boxes = preprocess_image_inv(img, img_raw.shape[1::-1], valid_boxes)
+img, valid_boxes = postprocess_image(img, img_raw.shape[1::-1], valid_boxes)
 img = draw_bboxes(img, valid_boxes, valid_score, valid_cls, names, shader)
 
 cv2.imshow('img', img[..., ::-1])
@@ -236,48 +237,40 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 
 Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3), Grayscale, Distort, Rotate(angle=7).
 
-**YOLOv3-tiny**(Pretrained on COCO)
+**YOLOv3-tiny**(Pretrained on COCO; Trained on VOC)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-|      |      |      |      |      |      |      | L2   | 18.5 | 44.9   | 10.4   |
-| ✔    |      |      |      |      |      |      | L2   | 22.0 | 49.1   | 15.2   |
-| ✔    | ✔    |      |      |      |      |      | L2   | 22.8 | 49.8   | 16.3   |
-| ✔    | ✔    | ✔    |      |      |      |      | L2   | 21.9 | 48.5   | 15.4   |
-| ✔    | ✔    |      |      |      |      |      | CIoU | 25.3 | 50.5   | 21.8   |
-| ✔    | ✔    |      | ✔    |      |      |      | CIoU | 25.6 | 49.4   | 23.6   |
-| ✔    | ✔    |      | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU | 23.7 | 46.1   | 21.3   |
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+|      |      |      |      |      | L2   | 18.5 | 44.9  | 10.4  |
+| ✔    |      |      |      |      | L2   | 22.0 | 49.1  | 15.2  |
+| ✔    | ✔    |      |      |      | L2   | 22.8 | 49.8  | 16.3  |
+| ✔    | ✔    | ✔    |      |      | L2   | 21.9 | 48.5  | 15.4  |
+| ✔    | ✔    |      |      |      | CIoU | 25.3 | 50.5  | 21.8  |
+| ✔    | ✔    |      | ✔    |      | CIoU | 25.6 | 49.4  | 23.6  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU | 23.7 | 46.1  | 21.3  |
 
-Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
+可能是，轮数还不充足，LS在小模型上并未展现出优势，甚至M有负面效果。
 
-**YOLOv3**(TODO; Pretrained on COCO)
+**YOLOv3**(TODO; Pretrained on COCO; Trained on VOC; only 15 epochs)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    |      | ✔    |      | CIoU | 46.5 | 80.0  | 49.0  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
-**YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights)
+**YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-| ✔    | ✔    |      | ✔    |      |      |      | CIoU | 27.6 | 48.3   | 28.9   |
-| ✔    | ✔    |      | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU |      |        |        |
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    |      | ✔    |      | CIoU | 27.6 | 48.3  | 28.9  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
-**YOLOv4**(TODO; Pretrained on COCO)
+**YOLOv4**(TODO; Pretrained on COCO;  Trained on VOC)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    | ✔    | ✔    |      | CIoU |      |       |       |
+| ✔    | ✔    | ✔    | ✔    | ✔    | CIoU |      |       |       |
 
 ### 3.3 Details
 
@@ -292,14 +285,10 @@ Maybe the model is underfitting, so **Label Smoothing** doesn't work ???
 
 | Stage | Freeze Backbone | LR                   | Epoch |
 | ----- | --------------- | -------------------- | ----- |
-| 1     | Yes             | 5e-4 (w/ W)          | 3     |
-| 2     | Yes             | 5e-4 to 1e-6 (w/ CA) | 180   |
+| 1     | Yes             | 1e-3 (w/ W)          | 3     |
+| 2     | Yes             | 1e-3 to 1e-6 (w/ CA) | N     |
 
-Continue finetuning ...
-
-| Stage | Freeze Backbone | LR                   | Epoch |
-| ----- | --------------- | -------------------- | ----- |
-| 1     | No              | 1e-3 to 1e-6 (w/ CA) | 180   |
+Training a complete network is time-consuming ...
 
 ## 4. Reference
 

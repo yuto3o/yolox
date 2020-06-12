@@ -3,12 +3,13 @@ import tensorflow as tf
 
 from core.losses.iou import GIoU, DIoU, CIoU
 
-WEIGHT_DECAY = 5e-4
+WEIGHT_DECAY = 0.  # 5e-4
 LEAKY_ALPHA = 0.1
 
 
 def DarknetConv2D(*args, **kwargs):
     darknet_conv_kwargs = {"kernel_regularizer": tf.keras.regularizers.l2(WEIGHT_DECAY),
+                           "kernel_initializer": tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.01),
                            "padding": "valid" if kwargs.get(
                                "strides") == (2, 2) else "same"}
     darknet_conv_kwargs.update(kwargs)
@@ -362,31 +363,6 @@ def _broadcast_iou(box_1, box_2):
     return int_area / tf.maximum(box_1_area + box_2_area - int_area, 1e-8)
 
 
-def _yolo_boxes(y_pred, num_classes, anchors):
-    y_shape = tf.shape(y_pred)
-    grid_w, grid_h = y_shape[2], y_shape[1]
-
-    pred_box_xy, pred_box_wh, pred_obj, pred_class = tf.split(y_pred, (2, 2, 1, num_classes), axis=-1)
-
-    pred_box_xy = tf.sigmoid(pred_box_xy)
-    pred_obj = tf.sigmoid(pred_obj)
-    pred_class = tf.sigmoid(pred_class)
-    pred_xywh = tf.concat((pred_box_xy, pred_box_wh), axis=-1)  # original xywh for loss
-
-    # !!! grid[x][y] == (y, x)
-    grid = tf.meshgrid(tf.range(grid_w), tf.range(grid_h))
-    grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)  # [gx, gy, 1, 2]
-
-    pred_box_xy = (pred_box_xy + tf.cast(grid, tf.float32)) / tf.cast([grid_w, grid_h], tf.float32)
-    pred_box_wh = tf.exp(pred_box_wh) * anchors
-
-    pred_box_x1y1 = pred_box_xy - pred_box_wh / 2.
-    pred_box_x2y2 = pred_box_xy + pred_box_wh / 2.
-    pred_box = tf.concat([pred_box_x1y1, pred_box_x2y2], axis=-1)
-
-    return pred_box, pred_obj, pred_class, pred_xywh
-
-
 def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
     def wrapper(y_true, y_pred):
         # 0. default
@@ -501,7 +477,6 @@ if __name__ == '__main__':
     model = tf.keras.Model(inputs, x)
     print(len(model.layers))
 
-
     x = inputs = tf.keras.Input([None, None, 3])
     x = PreprocessInput()(x)
     x = DarknetConv2D_BN_Mish(32, (3, 3))(x)
@@ -513,7 +488,3 @@ if __name__ == '__main__':
 
     model = tf.keras.Model(inputs, x)
     print(len(model.layers))
-
-
-
-

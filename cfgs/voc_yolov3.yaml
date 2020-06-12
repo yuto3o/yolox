@@ -1,7 +1,7 @@
 yolo:
   type: "yolov3"
-  iou_threshold: 0.45
-  score_threshold: 0.3
+  iou_threshold: 0.5
+  score_threshold: 0.005
   max_boxes: 100
   strides: "32,16,8"
   anchors: "10,13 16,30 33,23 30,61 62,45 59,119 116,90 156,198 373,326"
@@ -13,7 +13,7 @@ train:
   anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
-  batch_size: 4
+  batch_size: 2
   init_weight_path: "./ckpts/yolov3.h5"
   save_weight_path: "./ckpts"
 
@@ -22,13 +22,13 @@ train:
   mix_up: false
   cut_mix: false
   mosaic: false
-  label_smoothing: true
+  label_smoothing: false
   normal_method: true
 
-  ignore_threshold: 0.5
+  ignore_threshold: 0.7
 
 test:
   anno_path: "./data/pascal_voc/test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: ""
+  init_weight_path: "./ckpts/tmp/voc_yolov3/202006111147/mAP-0.3656.h5"

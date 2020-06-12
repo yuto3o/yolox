@@ -11,7 +11,7 @@ def read_video(*args, **kwargs):
     return cv2.VideoCapture(*args, **kwargs)
 
 
-def preprocess_image_inv(image, size, bboxes=None):
+def postprocess_image(image, size, bboxes=None):
     """
     :param image: RGB, uint8
     :param size:
@@ -45,14 +45,12 @@ def preprocess_image(image, size, bboxes=None):
     :param bboxes:
     :return: RGB, uint8
     """
-    img = image
-
     iw, ih = size
-    h, w, _ = img.shape
+    h, w, _ = image.shape
 
     scale = min(iw / w, ih / h)
     nw, nh = int(scale * w), int(scale * h)
-    image_resized = cv2.resize(img, (nw, nh))
+    image_resized = cv2.resize(image, (nw, nh))
 
     image_paded = np.full(shape=[ih, iw, 3], dtype=np.uint8, fill_value=127)
     dw, dh = (iw - nw) // 2, (ih - nh) // 2

@@ -4,7 +4,7 @@ import os
 import time
 import sys
 
-from core.image import preprocess_image, preprocess_image_inv, read_image
+from core.image import preprocess_image, postprocess_image, read_image
 
 
 def keras_bar(i, nums, width=30):
@@ -53,7 +53,7 @@ def local_eval(func, model, image_size, test_path, name_path, verbose):
             classes = classes[0][:valid_detections[0]]
 
             bboxes *= image_size
-            _, bboxes = preprocess_image_inv(image, (w, h), bboxes)
+            _, bboxes = postprocess_image(image, (w, h), bboxes)
 
             line = path
             for bbox, score, cls in zip(bboxes, scores, classes):

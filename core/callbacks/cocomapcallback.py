@@ -24,7 +24,7 @@ class COCOEvalCheckpoint(tf.keras.callbacks.Callback):
         self.sample_rate = sample_rate
 
         self._image_size = self.model_cfg['test']['image_size'][0]
-        self._best_mAP = -float('inf')
+        self._best_AP = -float('inf')
 
         self.name_path = self.model_cfg['train']['name_path']
         self.test_path = self.model_cfg['test']['anno_path']
@@ -35,22 +35,22 @@ class COCOEvalCheckpoint(tf.keras.callbacks.Callback):
             return
 
         print('\nTest')
-        mAP = local_eval(COCOeval, self.eval_model, self._image_size, self.test_path, self.name_path, self.verbose)
+        AP = local_eval(COCOeval, self.eval_model, self._image_size, self.test_path, self.name_path, self.verbose)
 
-        if mAP > self._best_mAP:
+        if AP > self._best_AP:
             if self.save_path is None:
                 if self.verbose > 0:
-                    print("mAP improved from {:.2%} to {:.2%}".format(self._best_mAP, mAP))
+                    print("AP improved from {:.2%} to {:.2%}".format(self._best_AP, AP))
             else:
-                save_path = self.save_path.format(mAP=mAP)
+                save_path = self.save_path.format(mAP=AP)
                 if self.verbose > 0:
                     print(
-                        "mAP improved from {:.2%} to {:.2%}, saving model to {}".format(self._best_mAP, mAP, save_path))
+                        "AP improved from {:.2%} to {:.2%}, saving model to {}".format(self._best_AP, AP, save_path))
                 if self.only_save_weight:
                     self.eval_model.save_weights(save_path)
                 else:
                     self.eval_model.save(save_path)
-            self._best_mAP = mAP
+            self._best_AP = AP
         else:
             if self.verbose > 0:
-                print("mAP not improved from {:.2%}".format(self._best_mAP))
+                print("AP not improved from {:.2%}".format(self._best_AP))

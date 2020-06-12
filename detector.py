@@ -2,7 +2,7 @@
 
 from absl import app, flags
 from core.utils import decode_cfg, load_weights
-from core.image import draw_bboxes, preprocess_image, preprocess_image_inv, read_image, read_video, Shader
+from core.image import draw_bboxes, preprocess_image, postprocess_image, read_image, read_video, Shader
 
 import time
 import cv2
@@ -69,7 +69,7 @@ def main(_argv):
         classes = classes[0][:valid_detections[0]]
 
         bboxes *= image_size
-        _, bboxes = preprocess_image_inv(image, (w, h), bboxes)
+        _, bboxes = postprocess_image(image, (w, h), bboxes)
 
         return (toc - tic) * 1000, bboxes, scores, classes
 

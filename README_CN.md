@@ -16,6 +16,7 @@ YOLOv4-tiny（YOLOv4未提出，非官方）
 - 本项目的数据增强均使用在线形式，高级的数据增强方式会大大拖慢训练速度。
 - 训练过程中，Tiny版问题不大，而完整版模型容易NaN或者收敛慢，还在调参中。
 - 增加了支持累计梯度的Adam优化器，类似darknet中subdivisions参数的作用。
+- 在我训练yolov3以及yolov4时，我像往常一样将weight decay设为5e-4时，网络的结果总是那么不尽如人意，这一点困扰了我很久；当我把它调到0时，手里的奶茶又开始变香了。
 
 ---
 
@@ -143,7 +144,7 @@ python detector.py --config=./cfgs/coco_yolov4.yaml --media=./misc/street.mp4 --
 ```python
 from core.utils import decode_cfg, load_weights
 from core.model.one_stage.yolov4 import YOLOv4
-from core.image import draw_bboxes, preprocess_image, preprocess_image_inv, read_image, Shader
+from core.image import draw_bboxes, preprocess_image, postprocess_image, read_image, Shader
 
 import numpy as np
 import cv2
@@ -176,7 +177,7 @@ valid_score = scores[0][:valid_detections[0]]
 valid_cls = classes[0][:valid_detections[0]]
 
 valid_boxes *= 512
-img, valid_boxes = preprocess_image_inv(img, img_raw.shape[1::-1], valid_boxes)
+img, valid_boxes = postprocess_image(img, img_raw.shape[1::-1], valid_boxes)
 img = draw_bboxes(img, valid_boxes, valid_score, valid_cls, names, shader)
 
 cv2.imshow('img', img[..., ::-1])
@@ -232,48 +233,40 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 
 Standard Method Package 包括 Flip left and right,  Crop and Zoom(jitter=0.3), Grayscale, Distort, Rotate(angle=7).
 
-**YOLOv3-tiny**(Pretrained on COCO)
+**YOLOv3-tiny**(Pretrained on COCO; Trained on VOC)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-|      |      |      |      |      |      |      | L2   | 18.5 | 44.9   | 10.4   |
-| ✔    |      |      |      |      |      |      | L2   | 22.0 | 49.1   | 15.2   |
-| ✔    | ✔    |      |      |      |      |      | L2   | 22.8 | 49.8   | 16.3   |
-| ✔    | ✔    | ✔    |      |      |      |      | L2   | 21.9 | 48.5   | 15.4   |
-| ✔    | ✔    |      |      |      |      |      | CIoU | 25.3 | 50.5   | 21.8   |
-| ✔    | ✔    |      | ✔    |      |      |      | CIoU | 25.6 | 49.4   | 23.6   |
-| ✔    | ✔    |      | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU | 23.7 | 46.1   | 21.3   |
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+|      |      |      |      |      | L2   | 18.5 | 44.9  | 10.4  |
+| ✔    |      |      |      |      | L2   | 22.0 | 49.1  | 15.2  |
+| ✔    | ✔    |      |      |      | L2   | 22.8 | 49.8  | 16.3  |
+| ✔    | ✔    | ✔    |      |      | L2   | 21.9 | 48.5  | 15.4  |
+| ✔    | ✔    |      |      |      | CIoU | 25.3 | 50.5  | 21.8  |
+| ✔    | ✔    |      | ✔    |      | CIoU | 25.6 | 49.4  | 23.6  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU | 23.7 | 46.1  | 21.3  |
 
 可能是，轮数还不充足，LS在小模型上并未展现出优势，甚至M有负面效果。
 
-**YOLOv3**(TODO; Pretrained on COCO)
+**YOLOv3**(TODO; Pretrained on COCO; Trained on VOC; 只训练了15轮)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    |      | ✔    |      | CIoU | 46.5 | 80.0  | 49.0  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
-**YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights)
+**YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-| ✔    | ✔    |      | ✔    |      |      |      | CIoU | 27.6 | 48.3   | 28.9   |
-| ✔    | ✔    |      | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    |      | ✔    |      |      | ✔    | CIoU |      |        |        |
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    |      | ✔    |      | CIoU | 27.6 | 48.3  | 28.9  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
-**YOLOv4**(TODO; Pretrained on COCO)
+**YOLOv4**(TODO; Pretrained on COCO; Trained on VOC)
 
-| SM   | DM   | LS   | FL   | MU   | CM   | M    | Loss | mAP  | mAP@50 | mAP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------ | ------ |
-| ✔    | ✔    | ✔    | ✔    |      |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    | ✔    |      |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      | ✔    |      | CIoU |      |        |        |
-| ✔    | ✔    | ✔    | ✔    |      |      | ✔    | CIoU |      |        |        |
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    | ✔    | ✔    |      | CIoU |      |       |       |
+| ✔    | ✔    | ✔    | ✔    | ✔    | CIoU |      |       |       |
 
 ### 3.3 训练细节
 
@@ -289,13 +282,9 @@ Standard Method Package 包括 Flip left and right,  Crop and Zoom(jitter=0.3), 
 | Stage | Freeze Backbone | LR                   | Epoch |
 | ----- | --------------- | -------------------- | ----- |
 | 1     | Yes             | 5e-4 (w/ W)          | 3     |
-| 2     | Yes             | 5e-4 to 1e-6 (w/ CA) | 180   |
+| 2     | Yes             | 5e-4 to 1e-6 (w/ CA) | N     |
 
-至此，得到了一个新的点数尚佳的起始模型，继续训练。
-
-| Stage | Freeze Backbone | LR   | Epoch |
-| ----- | --------------- | ---- | ----- |
-| 1     | No              | 1e-6 | 180   |
+训练完整的网络实在太费时间。
 
 ## 4. Reference
 
