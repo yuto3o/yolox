@@ -205,19 +205,19 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 
 | Model       | 416x416 | 512x512 | 608x608 |
 | ----------- | ------- | ------- | ------- |
-| YOLOv3      |         |         |         |
-| YOLOv3-tiny |         |         |         |
-| YOLOv4      |         |         |         |
-| YOLOv4-tiny |         |         |         |
+| YOLOv3      | 219 ms  | 320 ms  | 429 ms  |
+| YOLOv3-tiny | 49 ms   | 63 ms   | 78 ms   |
+| YOLOv4      | 344 ms  | 490 ms  | 682 ms  |
+| YOLOv4-tiny | 64 ms   | 86 ms   | 110 ms  |
 
 **i7-9700F+16GB / RTX 2070S+8G**
 
 | Model       | 416x416 | 512x512 | 608x608 |
 | ----------- | ------- | ------- | ------- |
-| YOLOv3      |         |         |         |
-| YOLOv3-tiny |         |         |         |
-| YOLOv4      | 61 ms   |         |         |
-| YOLOv4-tiny | 29 ms   |         |         |
+| YOLOv3      | 59 ms   | 66 ms   | 83 ms   |
+| YOLOv3-tiny | 28 ms   | 30 ms   | 33 ms   |
+| YOLOv4      | 73 ms   | 74 ms   | 91 ms   |
+| YOLOv4-tiny | 30 ms   | 31 ms   | 34 ms   |
 
 ### 3.2 Logs
 

@@ -23,13 +23,23 @@ def keras_bar(i, nums, width=30):
     return bar
 
 
-def local_eval(func, model, image_size, test_path, name_path, verbose):
+def local_eval(func, model, image_size, test_path, name_path, eval_n_samples, verbose):
     tmp_path = os.path.join('tmp' + time.strftime("%Y%m%d%H%M", time.localtime()))
     if os.path.exists(tmp_path):
         os.remove(tmp_path)
 
     with open(test_path) as f:
         lines = f.readlines()
+
+    if eval_n_samples != None:
+        lines = np.random.choice(lines, eval_n_samples)
+
+        test_path = os.path.join('tmp_test' + time.strftime("%Y%m%d%H%M", time.localtime()))
+        with open(test_path, 'w') as f:
+            for line in lines:
+                f.write(line)
+
+
     paths = [line.split()[0] for line in lines]
 
     infer_time = []
@@ -65,6 +75,9 @@ def local_eval(func, model, image_size, test_path, name_path, verbose):
     ans = func(test_path, tmp_path, name_path, verbose)
     # remove tmp
     os.remove(tmp_path)
+
+    if eval_n_samples != None:
+        os.remove(test_path)
 
     if verbose:
         if len(infer_time) > 5:

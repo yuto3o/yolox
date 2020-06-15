@@ -85,10 +85,10 @@ class Dataset(Sequence):
             if self.normal_method:
                 image = augment.random_distort(image)
                 image = augment.random_grayscale(image)
-                image, bboxes = augment.random_flip_lr(image, bboxes)
+                # image, bboxes = augment.random_flip_lr(image, bboxes)
                 image, bboxes = augment.random_rotate(image, bboxes)
-                image, bboxes, labels, weights = augment.random_crop_and_zoom(image, bboxes, labels, weights,
-                                                                              (self._image_size, self._image_size))
+                # image, bboxes, labels, weights = augment.random_crop_and_zoom(image, bboxes, labels, weights,
+                #                                                               (self._image_size, self._image_size))
 
             image, bboxes, labels, weights = augment.bbox_filter(image, bboxes, labels, weights)
 

@@ -29,7 +29,7 @@ def main(_argv):
         from core.model.one_stage.yolov3 import YOLOv3_Tiny as Model
         from core.model.one_stage.yolov3 import YOLOLoss as Loss
         num = 29
-        epochs = 90
+        epochs = 30
     elif model_type == 'yolov4':
         from core.model.one_stage.yolov4 import YOLOv4 as Model
         from core.model.one_stage.yolov4 import YOLOLoss as Loss
@@ -39,7 +39,7 @@ def main(_argv):
         from core.model.one_stage.yolov4 import YOLOv4_Tiny as Model
         from core.model.one_stage.yolov4 import YOLOLoss as Loss
         num = 29
-        epochs = 90
+        epochs = 30
     else:
         raise NotImplementedError()
 
@@ -71,11 +71,12 @@ def main(_argv):
 
     warmup_epochs = 3
     warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=warmup_epochs * len(train_dataset), verbose=1)]
-    # epochs=100
+
     eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
                                         eval_model=eval_model,
                                         model_cfg=cfg,
-                                        sample_rate=5,
+                                        eval_n_samples=None,
+                                        eval_per_batch=32000,
                                         verbose=1)
                      ]
     lr_callback = [CosineAnnealingScheduler(learning_rate=1e-3,
@@ -102,8 +103,8 @@ def main(_argv):
               callbacks=warmup_callback
               )
 
-    # for i in range(len(model.layers)): model.layers[i].trainable = True
-    # print('Unfreeze all layers.')
+    for i in range(len(model.layers)): model.layers[i].trainable = True
+    print('Unfreeze all layers.')
 
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
@@ -113,7 +114,6 @@ def main(_argv):
               )
 
     # reset sample rate
-    eval_callback[0].sample_rate = 1
     model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-7), run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=len(train_dataset),
