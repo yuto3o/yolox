@@ -249,8 +249,6 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 | ✔    | ✔    |      | ✔    |      | CIoU | 25.6 | 49.4  | 23.6  |
 | ✔    | ✔    |      | ✔    | ✔    | CIoU | 23.7 | 46.1  | 21.3  |
 
-可能是，轮数还不充足，LS在小模型上并未展现出优势，甚至M有负面效果。
-
 **YOLOv3**(TODO; Pretrained on COCO; Trained on VOC; only 15 epochs)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
