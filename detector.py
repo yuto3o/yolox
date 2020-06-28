@@ -51,7 +51,7 @@ def main(_argv):
 
     # assign colors for difference labels
     shader = Shader(cfg['yolo']['num_classes'])
-    names = cfg['train']['names']
+    names = cfg['yolo']['names']
     image_size = cfg['test']['image_size'][0]
 
     def inference(image):
@@ -68,7 +68,7 @@ def main(_argv):
         scores = scores[0][:valid_detections[0]]
         classes = classes[0][:valid_detections[0]]
 
-        bboxes *= image_size
+        # bboxes *= image_size
         _, bboxes = postprocess_image(image, (w, h), bboxes)
 
         return (toc - tic) * 1000, bboxes, scores, classes

@@ -6,10 +6,10 @@ yolo:
   strides: "32,16,8"
   anchors: "12,16 19,36 40,28 36,75 76,55 72,146 142,110 192,243 459,401"
   mask: "6,7,8 3,4,5 0,1,2"
+  name_path: "./data/pascal_voc/voc.name"
 
 train:
   label: "voc_yolov4_NM_LS_CIoU_FL"
-  name_path: "./data/pascal_voc/voc.name"
   anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 
-from core.metrics import VOCeval
+from core.metrics import VOCEval
 from core.callbacks.utils import local_eval
 
 
@@ -11,7 +11,6 @@ class VOCEvalCheckpoint(tf.keras.callbacks.Callback):
                  save_path,
                  eval_model,
                  model_cfg,
-                 sample_rate,
                  only_save_weight=True,
                  verbose=0):
         super(VOCEvalCheckpoint, self).__init__()
@@ -21,22 +20,16 @@ class VOCEvalCheckpoint(tf.keras.callbacks.Callback):
 
         self.only_save_weight = only_save_weight
         self.verbose = verbose
-        self.sample_rate = sample_rate
 
         self._image_size = self.model_cfg['test']['image_size'][0]
         self._best_mAP = -float('inf')
 
-        self.name_path = self.model_cfg['train']['name_path']
+        self.name_path = self.model_cfg['yolo']['name_path']
         self.test_path = self.model_cfg['test']['anno_path']
-
-        self.train_path = self.model_cfg['train']['anno_path']
 
     def on_epoch_end(self, epoch, logs=None):
 
-        if epoch % self.sample_rate != self.sample_rate - 1:
-            return
-
-        mAP = local_eval(VOCeval, self.eval_model, self._image_size, self.test_path, self.name_path, self.verbose)
+        mAP = local_eval(VOCEval, self.eval_model, self._image_size, self.test_path, self.name_path, self.verbose)
 
         if mAP > self._best_mAP:
             if self.save_path is None:

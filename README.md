@@ -241,13 +241,12 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
-|      |      |      |      |      | L2   | 18.5 | 44.9  | 10.4  |
-| ✔    |      |      |      |      | L2   | 22.0 | 49.1  | 15.2  |
-| ✔    | ✔    |      |      |      | L2   | 22.8 | 49.8  | 16.3  |
-| ✔    | ✔    | ✔    |      |      | L2   | 21.9 | 48.5  | 15.4  |
-| ✔    | ✔    |      |      |      | CIoU | 25.3 | 50.5  | 21.8  |
-| ✔    | ✔    |      | ✔    |      | CIoU | 25.6 | 49.4  | 23.6  |
-| ✔    | ✔    |      | ✔    | ✔    | CIoU | 23.7 | 46.1  | 21.3  |
+| ✔    |      |      |      |      | L2   | 26.6 | 61.8 | 17.2  |
+| ✔    | ✔    |      |      |      | L2   | 27.3 | 62.4 | 17.9  |
+| ✔    | ✔    | ✔    |      |      | L2   | 26.7 | 61.7  | 17.1 |
+| ✔    | ✔    |      |      |      | CIoU | 30.9 | 64.2  | 25.0 |
+| ✔    | ✔    |      | ✔    |      | CIoU | 32.3 | 65.7 | 27.6  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |  |  |  |
 
 **YOLOv3**(TODO; Pretrained on COCO; Trained on VOC; only 15 epochs)
 
@@ -260,7 +259,7 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
-| ✔    | ✔    |      | ✔    |      | CIoU | 27.6 | 48.3  | 28.9  |
+| ✔    | ✔    |      | ✔    |      | CIoU | 35.0 | 65.7  | 33.8 |
 | ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
 **YOLOv4**(TODO; Pretrained on COCO;  Trained on VOC)
@@ -281,9 +280,9 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 
 #### Common Version
 
-| Stage | Freeze Backbone | LR                   | Epoch |
+| Stage | Freeze Backbone | LR                   | Steps |
 | ----- | --------------- | -------------------- | ----- |
-| 1     | Yes             | 1e-3 (w/ W)          | 3     |
+| 1     | Yes             | 1e-3 (w/ W)          | 16000 |
 | 2     | Yes             | 1e-3 to 1e-6 (w/ CA) | N     |
 
 Training a complete network is time-consuming ...

@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from core.losses.iou import GIoU, DIoU, CIoU
 
-WEIGHT_DECAY = 0.  # 5e-4
+WEIGHT_DECAY = 0. # 5e-4
 LEAKY_ALPHA = 0.1
 
 
@@ -212,11 +212,11 @@ class Header(tf.keras.layers.Layer):
 
             grid_shape = x_shape[1:3]
             grid_h, grid_w = grid_shape[0], grid_shape[1]
-            anchors = tf.cast(anchors, dtype) / tf.cast(tf.multiply([grid_w, grid_h], stride), dtype)  # norm
+            anchors = tf.cast(anchors, dtype)
             grid = tf.meshgrid(tf.range(grid_w), tf.range(grid_h))
             grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)  # [gx, gy, 1, 2]
 
-            box_xy = (box_xy + tf.cast(grid, dtype)) / tf.cast([grid_w, grid_h], dtype)
+            box_xy = (box_xy + tf.cast(grid, dtype)) * stride
             box_wh = tf.exp(box_wh) * tf.cast(anchors, dtype)
 
             box_x1y1 = box_xy - box_wh / 2.
@@ -277,8 +277,8 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         dtype = y_pred.dtype
         y_shape = tf.shape(y_pred)
         grid_w, grid_h = y_shape[2], y_shape[1]
-        anchors_tensor = tf.cast(anchors, dtype) / tf.cast(tf.multiply([grid_w, grid_h], stride), dtype)
-        y_true = tf.reshape(y_true, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 6))
+        anchors_tensor = tf.cast(anchors, dtype)
+        y_true = tf.reshape(y_true, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 5))
         y_pred = tf.reshape(y_pred, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 5))
 
         # 1. transform all pred outputs
@@ -289,7 +289,7 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         grid = tf.meshgrid(tf.range(grid_w), tf.range(grid_h))
         grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)  # [gx, gy, 1, 2]
 
-        pred_xy = (tf.sigmoid(pred_xy) + tf.cast(grid, dtype)) / tf.cast([grid_w, grid_h], dtype)
+        pred_xy = (tf.sigmoid(pred_xy) + tf.cast(grid, dtype)) * stride
         pred_wh = tf.exp(pred_wh) * anchors_tensor
         pred_obj = tf.sigmoid(pred_obj)
         pred_cls = tf.sigmoid(pred_cls)
@@ -301,16 +301,15 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
 
         # 2. transform all true outputs
         # y_true: (batch_size, grid, grid, anchors, (x1, y1, x2, y2, obj, cls))
-        true_box, true_obj, true_weight, true_cls = tf.split(y_true, (4, 1, 1, num_classes), axis=-1)
+        true_box, true_obj, true_cls = tf.split(y_true, (4, 1, num_classes), axis=-1)
         true_xy = (true_box[..., 0:2] + true_box[..., 2:4]) / 2.
         true_wh = true_box[..., 2:4] - true_box[..., 0:2]
 
         # give higher weights to small boxes
-        box_loss_scale = 2 - true_wh[..., 0] * true_wh[..., 1]
+        box_loss_scale = 2 - true_wh[..., 0] * true_wh[..., 1] / (tf.cast(tf.reduce_prod([grid_w, grid_h, stride, stride]), dtype))
 
         # 4. calculate all masks
         obj_mask = tf.squeeze(true_obj, -1)
-        weight = tf.squeeze(true_weight, -1)
         # ignore false positive when iou is over threshold
         best_iou = tf.map_fn(
             lambda x: tf.reduce_max(_broadcast_iou(x[0], tf.boolean_mask(x[1], tf.cast(x[2], tf.bool))), axis=-1),
@@ -349,12 +348,9 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
             obj_loss = focal_loss * obj_loss
 
         # 6. sum over (batch, gridx, gridy, anchors) => (batch, 1)
-        box_loss = tf.reduce_mean(tf.reduce_sum(weight * box_loss, axis=(1, 2, 3)))
-        obj_loss = tf.reduce_mean(tf.reduce_sum(weight * obj_loss, axis=(1, 2, 3)))
-        cls_loss = tf.reduce_mean(tf.reduce_sum(weight * cls_loss, axis=(1, 2, 3)))
-
-        # if tf.math.is_nan(box_loss) or tf.math.is_nan(obj_loss)  or tf.math.is_nan(cls_loss):
-        # tf.print('loss', box_loss, obj_loss, cls_loss)
+        box_loss = tf.reduce_mean(tf.reduce_sum(box_loss, axis=(1, 2, 3)))
+        obj_loss = tf.reduce_mean(tf.reduce_sum(obj_loss, axis=(1, 2, 3)))
+        cls_loss = tf.reduce_mean(tf.reduce_sum(cls_loss, axis=(1, 2, 3)))
 
         return box_loss + obj_loss + cls_loss
 

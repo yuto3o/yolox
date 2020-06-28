@@ -39,7 +39,7 @@ def voc_ap(rec, prec, use_07_metric=False):
     return ap
 
 
-def VOCeval(y_true_path,
+def VOCEval(y_true_path,
             y_pred_path,
             name_path,
             ovthresh=0.5,
@@ -171,4 +171,4 @@ def VOCeval(y_true_path,
     if verbose > 0:
         print("{:>15}|{:>15.2%}".format('mAP', mAP))
 
-    return ans
+    return mAP

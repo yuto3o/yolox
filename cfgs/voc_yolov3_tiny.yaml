@@ -6,10 +6,10 @@ yolo:
   strides: "32,16"
   anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
   mask: "3,4,5 0,1,2"
+  name_path: "./data/pascal_voc/voc.name"
 
 train:
   label: "voc_yolov3_tiny_SM_DM_CIoU_FL_M"
-  name_path: "./data/pascal_voc/voc.name"
   anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
@@ -21,7 +21,7 @@ train:
 
   mix_up: false
   cut_mix: false
-  mosaic: true
+  mosaic: false
   label_smoothing: false
   normal_method: true
 
@@ -31,4 +31,4 @@ test:
   anno_path: "./data/pascal_voc/test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: ""
+  init_weight_path: "C:\\Users\\test\\Documents\\CodeHub\\MTYOLO\\ckpts\\tmp\\voc_yolov3_tiny_SM_DM_CIoU_FL\\202005270950\\mAP-0.2565.h5"

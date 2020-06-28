@@ -1,15 +1,16 @@
 yolo:
   type: "yolov3_tiny"
   iou_threshold: 0.5
-  score_threshold: 0.005
+  score_threshold: 0.4
   max_boxes: 100
   strides: "32,16"
   anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
   mask: "3,4,5 0,1,2"
+  name_path: "./data/coco/coco.name"
 
 train:
   label: "coco_yolov3_tiny"
-  name_path: "./data/coco/coco.name"
+
   anno_path: "./data/coco/train2017.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
@@ -29,6 +30,6 @@ train:
 
 test:
   anno_path: "./data/coco/val2017.txt"
-  image_size: "416"
+  image_size: "608"
   batch_size: 1
   init_weight_path: "./ckpts/yolov3-tiny.weights"

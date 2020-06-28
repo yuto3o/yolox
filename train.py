@@ -24,22 +24,22 @@ def main(_argv):
         from core.model.one_stage.yolov3 import YOLOv3 as Model
         from core.model.one_stage.yolov3 import YOLOLoss as Loss
         num = 186
-        epochs = 270
+        epochs = 500
     elif model_type == 'yolov3_tiny':
         from core.model.one_stage.yolov3 import YOLOv3_Tiny as Model
         from core.model.one_stage.yolov3 import YOLOLoss as Loss
         num = 29
-        epochs = 30
+        epochs = 50
     elif model_type == 'yolov4':
         from core.model.one_stage.yolov4 import YOLOv4 as Model
         from core.model.one_stage.yolov4 import YOLOLoss as Loss
         num = 251
-        epochs = 270
+        epochs = 500
     elif model_type == 'yolov4_tiny':
         from core.model.one_stage.yolov4 import YOLOv4_Tiny as Model
         from core.model.one_stage.yolov4 import YOLOLoss as Loss
         num = 29
-        epochs = 30
+        epochs = 50
     else:
         raise NotImplementedError()
 
@@ -69,14 +69,11 @@ def main(_argv):
     ckpt_path = os.path.join(cfg["train"]["save_weight_path"], 'tmp', cfg["train"]["label"],
                              time.strftime("%Y%m%d%H%M", time.localtime()))
 
-    warmup_epochs = 3
-    warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=warmup_epochs * len(train_dataset), verbose=1)]
+    warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=16000, verbose=1)]
 
     eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
                                         eval_model=eval_model,
                                         model_cfg=cfg,
-                                        eval_n_samples=None,
-                                        eval_per_batch=32000,
                                         verbose=1)
                      ]
     lr_callback = [CosineAnnealingScheduler(learning_rate=1e-3,
@@ -88,8 +85,7 @@ def main(_argv):
         os.makedirs(ckpt_path)
         os.makedirs(os.path.join(ckpt_path, 'train', 'plugins', 'profile'))
 
-    # opt = optimizers.Adam(lr=0.)
-    opt = Accumulative(optimizers.Adam(lr=0.), 32)
+    opt = Accumulative(optimizers.Adam(lr=0.), 16)
     # warm-up
     for i in range(num):
         model.layers[i].trainable = False
@@ -98,8 +94,8 @@ def main(_argv):
 
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
-              steps_per_epoch=len(train_dataset),
-              epochs=warmup_epochs,
+              steps_per_epoch=16000,
+              epochs=1,
               callbacks=warmup_callback
               )
 
@@ -108,7 +104,7 @@ def main(_argv):
 
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
-              steps_per_epoch=len(train_dataset),
+              steps_per_epoch=16000,
               epochs=epochs,
               callbacks=eval_callback + lr_callback
               )
@@ -116,7 +112,7 @@ def main(_argv):
     # reset sample rate
     model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-7), run_eagerly=False)
     model.fit(train_dataset,
-              steps_per_epoch=len(train_dataset),
+              steps_per_epoch=16000,
               epochs=10,
               callbacks=eval_callback
               )

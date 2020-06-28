@@ -9,8 +9,8 @@ from collections import defaultdict
 from core.utils import decode_annotation, decode_name
 
 
-def COCOeval(test_path, tmp_path, name_path, verbose):
-    E = _COCOeval(test_path, tmp_path, name_path)
+def COCOEval(test_path, tmp_path, name_path, verbose):
+    E = _COCOEval(test_path, tmp_path, name_path)
     E.evaluate()  # run per image evaluation
     E.accumulate()  # accumulate per image results
     if verbose:
@@ -18,7 +18,7 @@ def COCOeval(test_path, tmp_path, name_path, verbose):
     return E.map
 
 
-class _COCOeval:
+class _COCOEval:
     # Interface for evaluating detection on the Microsoft COCO dataset.
     #
     # The usage for CocoEval is as follows:

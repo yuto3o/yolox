@@ -23,22 +23,13 @@ def keras_bar(i, nums, width=30):
     return bar
 
 
-def local_eval(func, model, image_size, test_path, name_path, eval_n_samples, verbose):
+def local_eval(func, model, image_size, test_path, name_path, verbose):
     tmp_path = os.path.join('tmp' + time.strftime("%Y%m%d%H%M", time.localtime()))
     if os.path.exists(tmp_path):
         os.remove(tmp_path)
 
     with open(test_path) as f:
         lines = f.readlines()
-
-    if eval_n_samples != None:
-        lines = np.random.choice(lines, eval_n_samples)
-
-        test_path = os.path.join('tmp_test' + time.strftime("%Y%m%d%H%M", time.localtime()))
-        with open(test_path, 'w') as f:
-            for line in lines:
-                f.write(line)
-
 
     paths = [line.split()[0] for line in lines]
 
@@ -62,7 +53,6 @@ def local_eval(func, model, image_size, test_path, name_path, eval_n_samples, ve
             scores = scores[0][:valid_detections[0]]
             classes = classes[0][:valid_detections[0]]
 
-            bboxes *= image_size
             _, bboxes = postprocess_image(image, (w, h), bboxes)
 
             line = path
@@ -72,12 +62,9 @@ def local_eval(func, model, image_size, test_path, name_path, eval_n_samples, ve
 
             f.write(line + '\n')
 
-    ans = func(test_path, tmp_path, name_path, verbose)
+    ans = func(test_path, tmp_path, name_path, verbose=verbose)
     # remove tmp
     os.remove(tmp_path)
-
-    if eval_n_samples != None:
-        os.remove(test_path)
 
     if verbose:
         if len(infer_time) > 5:
@@ -85,6 +72,6 @@ def local_eval(func, model, image_size, test_path, name_path, eval_n_samples, ve
         else:
             s = np.mean(infer_time)
 
-        print('Inference time', s*1000, 'ms')
+        print('\nInference time', s*1000, 'ms')
 
     return ans

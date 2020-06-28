@@ -23,12 +23,12 @@ def decode_cfg(path):
         cfg['yolo']['strides'] = list(map(int, cfg['yolo']['strides'].split(',')))
         cfg['yolo']['mask'] = _decode_yaml_tuple(cfg['yolo']['mask'])
         cfg['yolo']['anchors'] = _decode_yaml_tuple(cfg['yolo']['anchors'])
+        cfg['yolo']['names'] = decode_name(cfg['yolo']['name_path'])
+        cfg['yolo']['num_classes'] = len(cfg['yolo']['names'])
 
         cfg['train']['image_size'] = list(map(int, cfg['train']['image_size'].split(',')))
-        cfg['train']['names'] = decode_name(cfg['train']['name_path'])
-
         cfg['test']['image_size'] = list(map(int, cfg['test']['image_size'].split(',')))
-        cfg['yolo']['num_classes'] = len(cfg['train']['names'])
+
 
         pprint.pprint(cfg)
 

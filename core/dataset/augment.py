@@ -32,13 +32,8 @@ def mosic(image, bboxes, labels,
 
     mix_bboxes = np.vstack((bboxes, bboxes2, bboxes3, bboxes4))
     mix_labels = np.vstack((labels[keep_idx], labels2[keep_idx2], labels3[keep_idx3], labels4[keep_idx4]))
-    # mix_weights = np.hstack((np.full(len(keep_idx), s),
-    #                          np.full(len(keep_idx2), s2),
-    #                          np.full(len(keep_idx3), s3),
-    #                          np.full(len(keep_idx4), s4)))
-    mix_weights = np.full(len(mix_labels), 1.)
 
-    return mix_img, mix_bboxes, mix_labels, mix_weights
+    return mix_img, mix_bboxes, mix_labels
 
 
 def clip_bbox(bboxes, target_bbox):
@@ -245,7 +240,7 @@ def random_flip_lr(image, bboxes):
     return image, bboxes
 
 
-def random_crop_and_zoom(image, bboxes, labels, weights, size, jitter=0.3):
+def random_crop_and_zoom(image, bboxes, labels, size, jitter=0.3):
     net_w, net_h = size
     h, w, _ = image.shape
     dw = w * jitter
@@ -277,12 +272,12 @@ def random_crop_and_zoom(image, bboxes, labels, weights, size, jitter=0.3):
     filter_b = np.logical_or(bboxes[:, 0] >= bboxes[:, 2], bboxes[:, 1] >= bboxes[:, 3])
     bboxes = bboxes[~filter_b]
     labels = labels[~filter_b]
-    weights = weights[~filter_b]
-
-    return image, bboxes, labels, weights
 
 
-def bbox_filter(image, bboxes, labels, weights):
+    return image, bboxes, labels
+
+
+def bbox_filter(image, bboxes, labels):
     """
     Maginot Line
     """
@@ -301,4 +296,4 @@ def bbox_filter(image, bboxes, labels, weights):
     bboxes = np.stack([x1, y1, x2, y2], axis=-1)
     # keep_idx = np.any(np.not_equal(bboxes, 0), axis=-1)
     keep_idx = int_area > 0.
-    return image, bboxes[keep_idx], labels[keep_idx], weights[keep_idx]
+    return image, bboxes[keep_idx], labels[keep_idx]
