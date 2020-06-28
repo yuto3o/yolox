@@ -156,6 +156,7 @@ import time
 
 # read config
 cfg = decode_cfg('cfgs/coco_yolov4.yaml')
+names = cfg['yolo']['names']
 
 model, eval_model = YOLOv4(cfg)
 eval_model.summary()
@@ -180,7 +181,6 @@ valid_boxes = boxes[0][:valid_detections[0]]
 valid_score = scores[0][:valid_detections[0]]
 valid_cls = classes[0][:valid_detections[0]]
 
-valid_boxes *= 512
 img, valid_boxes = postprocess_image(img, img_raw.shape[1::-1], valid_boxes)
 img = draw_bboxes(img, valid_boxes, valid_score, valid_cls, names, shader)
 
