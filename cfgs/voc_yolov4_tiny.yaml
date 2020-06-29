@@ -31,4 +31,4 @@ test:
   anno_path: "./data/pascal_voc/test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: "./ckpts/voc_yolov4_tiny.h5"
+  init_weight_path: ""

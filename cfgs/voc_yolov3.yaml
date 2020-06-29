@@ -31,4 +31,4 @@ test:
   anno_path: "./data/pascal_voc/test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: "./ckpts/tmp/voc_yolov3/202006111147/mAP-0.3656.h5"
+  init_weight_path: ""

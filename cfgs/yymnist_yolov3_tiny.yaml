@@ -31,4 +31,4 @@ test:
   anno_path: "./data/yymnist/yy_test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: "./ckpts/tmp/yymnist_yolov3_tiny/202006101629/mAP-0.8376.h5"
+  init_weight_path: "./ckpts/yolov3-tiny.h5"
