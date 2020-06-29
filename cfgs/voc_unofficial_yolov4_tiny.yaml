@@ -1,20 +1,20 @@
 yolo:
-  type: "yolov3_tiny"
+  type: "unofficial_yolov4_tiny"
   iou_threshold: 0.5
   score_threshold: 0.005
   max_boxes: 100
   strides: "32,16"
-  anchors: "23,27 37,58 81,82 81,82 135,169 344,319"
+  anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
   mask: "3,4,5 0,1,2"
-  name_path: "./data/coco/coco.name"
+  name_path: "./data/pascal_voc/voc.name"
 
 train:
-  label: "coco_yolov3_tiny"
-  anno_path: "./data/coco/train2017.txt"
+  label: "voc_yolov4_tiny_SM_DM_CIoU_FL"
+  anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
   batch_size: 4
-  init_weight_path: "./ckpts/yolov3-tiny.weights"
+  init_weight_path: "./ckpts/yolov3-tiny.h5"
   save_weight_path: "./ckpts"
 
   loss_type: "CIoU+FL"
@@ -25,10 +25,10 @@ train:
   label_smoothing: false
   normal_method: true
 
-  ignore_threshold: 0.7
+  ignore_threshold: 0.5
 
 test:
-  anno_path: "./data/coco/val2017.txt"
+  anno_path: "./data/pascal_voc/test.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: "./ckpts/yolov3-tiny.weights"
+  init_weight_path: "./ckpts/voc_yolov4_tiny.h5"

@@ -2,9 +2,9 @@
 
 TensorFlow & Keras Implementations & Python
 
-YOLOv3, YOLOv3-tiny, YOLOv4
+YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny
 
-YOLOv4-tiny（YOLOv4未提出，非官方）
+Unofficial-YOLOv4-tiny（非官方）
 
 **requirements:** TensorFlow 2.x (not test on 1.x), OpenCV, Numpy, PyYAML
 
@@ -17,12 +17,12 @@ YOLOv4-tiny（YOLOv4未提出，非官方）
 - 训练过程中，Tiny版问题不大，而完整版模型容易NaN或者收敛慢，还在调参中。
 - 增加了支持累计梯度的Adam优化器，类似darknet中subdivisions参数的作用。
 - 在我训练yolov3以及yolov4时，我像往常一样将weight decay设为5e-4时，网络的结果总是那么不尽如人意，这一点困扰了我很久；当我把它调到0时，手里的奶茶又开始变香了。
-
+- 在原始的tiny版本中，第一个anchor将不使用，这导致了大部分复现结果的差异。[[link]](https://github.com/hunglc007/tensorflow-yolov4-tflite/issues/111)
 ---
 
 This repository have done:
 
-- [x] Backbone for YOLO (YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny[unofficial])
+- [x] Backbone for YOLO (YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny, Unofficial-YOLOv4-tiny)
 - [x] YOLOv3 Head
 - [x] Keras Callbacks for Online Evaluation
 - [x] Load Official Weight File
@@ -75,8 +75,8 @@ path/to/image2 x1,y1,x2,y2,label
 # voc_yolov3_tiny.yaml
 yolo:
   type: "yolov3_tiny" # 当前只能是 'yolov3', 'yolov3_tiny', 'yolov4', 'yolov4_tiny'
-  iou_threshold: 0.45
-  score_threshold: 0.5
+  iou_threshold: 0.5
+  score_threshold: 0.005
   max_boxes: 100
   strides: "32,16"
   anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
@@ -204,7 +204,8 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | YOLOv3      | 219 ms  | 320 ms  | 429 ms  |
 | YOLOv3-tiny | 49 ms   | 63 ms   | 78 ms   |
 | YOLOv4      | 344 ms  | 490 ms  | 682 ms  |
-| YOLOv4-tiny | 64 ms   | 86 ms   | 110 ms  |
+| YOLOv4-tiny | 51 ms   | 66 ms   | 83 ms  |
+| Unofficial-YOLOv4-tiny | 64 ms   | 86 ms   | 110 ms  |
 
 **i7-9700F+16GB / RTX 2070S+8G**
 
@@ -213,7 +214,8 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | YOLOv3      | 59 ms   | 66 ms   | 83 ms   |
 | YOLOv3-tiny | 28 ms   | 30 ms   | 33 ms   |
 | YOLOv4      | 73 ms   | 74 ms   | 91 ms   |
-| YOLOv4-tiny | 30 ms   | 31 ms   | 34 ms   |
+| YOLOv4-tiny | 30 ms   | 32 ms   | 35 ms  |
+| Unofficial-YOLOv4-tiny | 30 ms   | 31 ms   | 34 ms   |
 
 ### 3.2 Logs
 
@@ -252,6 +254,13 @@ Standard Method Package 包括 Flip left and right,  Crop and Zoom(jitter=0.3), 
 | ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
 **YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
+
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    |      | ✔    |      | CIoU |  |   |  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
+
+**Unofficial-YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |

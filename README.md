@@ -6,9 +6,9 @@ English | [中文](./README_CN.md)
 
 TensorFlow & Keras Implementations & Python
 
-YOLOv3, YOLOv3-tiny, YOLOv4
+YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny
 
-YOLOv4-tiny(unofficial)
+Unofficial-YOLOv4-tiny
 
 **requirements:** TensorFlow 2.x (not test on 1.x), OpenCV, Numpy, PyYAML
 
@@ -21,12 +21,12 @@ YOLOv4-tiny(unofficial)
 - When I tried to train yolov3 or yolov4, 'NaN' problem made me crazy.
 - Support AccumOptimizer, Similar to  'subdivisions' in darknet.
 - When I tried to train yolov3 or yolov4, I found that if I set weight decay to 5e-4，the result is unsatisfactory; if I set it to 0, everything is OK.
-
+- Note that both yolov3-tiny and yolov4-tiny don't use anchor 0, so they use only anchors 1-7.[[link]](https://github.com/hunglc007/tensorflow-yolov4-tflite/issues/111)
 ---
 
 This repository have done:
 
-- [x] Backbone for YOLO (YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny[unofficial])
+- [x] Backbone for YOLO (YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny, Unofficial-YOLOv4-tiny)
 - [x] YOLOv3 Head
 - [x] Keras Callbacks for Online Evaluation
 - [x] Load Official Weight File
@@ -79,8 +79,8 @@ More details and a simple dataset could be got from https://github.com/YunYang19
 # voc_yolov3_tiny.yaml
 yolo:
   type: "yolov3_tiny" # must be 'yolov3', 'yolov3_tiny', 'yolov4', 'yolov4_tiny'.
-  iou_threshold: 0.45
-  score_threshold: 0.5
+  iou_threshold: 0.5
+  score_threshold: 0.005
   max_boxes: 100
   strides: "32,16"
   anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
@@ -208,7 +208,8 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | YOLOv3      | 219 ms  | 320 ms  | 429 ms  |
 | YOLOv3-tiny | 49 ms   | 63 ms   | 78 ms   |
 | YOLOv4      | 344 ms  | 490 ms  | 682 ms  |
-| YOLOv4-tiny | 64 ms   | 86 ms   | 110 ms  |
+| YOLOv4-tiny | 51 ms   | 66 ms   | 83 ms  |
+| Unofficial-YOLOv4-tiny | 64 ms   | 86 ms   | 110 ms  |
 
 **i7-9700F+16GB / RTX 2070S+8G**
 
@@ -217,7 +218,8 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | YOLOv3      | 59 ms   | 66 ms   | 83 ms   |
 | YOLOv3-tiny | 28 ms   | 30 ms   | 33 ms   |
 | YOLOv4      | 73 ms   | 74 ms   | 91 ms   |
-| YOLOv4-tiny | 30 ms   | 31 ms   | 34 ms   |
+| YOLOv4-tiny | 30 ms   | 32 ms   | 35 ms  |
+| Unofficial-YOLOv4-tiny | 30 ms   | 31 ms   | 34 ms   |
 
 ### 3.2 Logs
 
@@ -255,7 +257,14 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 | ✔    | ✔    |      | ✔    |      | CIoU | 46.5 | 80.0  | 49.0  |
 | ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
-**YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
+**YOLOv4-tiny**(TODO; Pretrained on COCO;  Trained on VOC)
+
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    | ✔    | ✔    |      | CIoU |      |       |       |
+| ✔    | ✔    | ✔    | ✔    | ✔    | CIoU |      |       |       |
+
+**Unofficial-YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |

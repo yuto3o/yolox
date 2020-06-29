@@ -4,7 +4,7 @@ yolo:
   score_threshold: 0.005
   max_boxes: 100
   strides: "32,16"
-  anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
+  anchors: "23,27 37,58 81,82 81,82 135,169 344,319"
   mask: "3,4,5 0,1,2"
   name_path: "./data/pascal_voc/voc.name"
 
@@ -14,7 +14,7 @@ train:
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
   batch_size: 4
-  init_weight_path: "./ckpts/yolov3-tiny.h5"
+  init_weight_path: "./ckpts/yolov4-tiny.h5"
   save_weight_path: "./ckpts"
 
   loss_type: "CIoU+FL"

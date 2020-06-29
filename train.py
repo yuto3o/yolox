@@ -38,10 +38,17 @@ def main(_argv):
     elif model_type == 'yolov4_tiny':
         from core.model.one_stage.yolov4 import YOLOv4_Tiny as Model
         from core.model.one_stage.yolov4 import YOLOLoss as Loss
+        num = 61
+        epochs = 50
+    elif model_type == 'unofficial_yolov4_tiny':
+        from core.model.one_stage.yolov4 import Unofficial_YOLOv4_Tiny as Model
+        from core.model.one_stage.yolov4 import YOLOLoss as Loss
         num = 29
         epochs = 50
     else:
         raise NotImplementedError()
+
+    epoch_steps = 3000
 
     model, eval_model = Model(cfg)
     model.summary()
@@ -69,7 +76,7 @@ def main(_argv):
     ckpt_path = os.path.join(cfg["train"]["save_weight_path"], 'tmp', cfg["train"]["label"],
                              time.strftime("%Y%m%d%H%M", time.localtime()))
 
-    warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=16000, verbose=1)]
+    warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=epoch_steps, verbose=1)]
 
     eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
                                         eval_model=eval_model,
@@ -78,7 +85,7 @@ def main(_argv):
                      ]
     lr_callback = [CosineAnnealingScheduler(learning_rate=1e-3,
                                             eta_min=1e-6,
-                                            T_max=epochs * len(train_dataset),
+                                            T_max=epochs * epoch_steps,
                                             verbose=1)]
 
     if not os.path.isdir(ckpt_path):
@@ -94,7 +101,7 @@ def main(_argv):
 
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
-              steps_per_epoch=16000,
+              steps_per_epoch=epoch_steps,
               epochs=1,
               callbacks=warmup_callback
               )
@@ -104,7 +111,7 @@ def main(_argv):
 
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
-              steps_per_epoch=16000,
+              steps_per_epoch=epoch_steps,
               epochs=epochs,
               callbacks=eval_callback + lr_callback
               )
@@ -112,7 +119,7 @@ def main(_argv):
     # reset sample rate
     model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-7), run_eagerly=False)
     model.fit(train_dataset,
-              steps_per_epoch=16000,
+              steps_per_epoch=epoch_steps,
               epochs=10,
               callbacks=eval_callback
               )

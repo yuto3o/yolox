@@ -119,20 +119,37 @@ class Dataset(Sequence):
         intersection = np.minimum(bboxes_wh_exp[..., 0], self.anchors[:, 0]) * np.minimum(bboxes_wh_exp[..., 1],
                                                                                           self.anchors[:, 1])
         iou = intersection / (boxes_area + anchor_area - intersection + 1e-8)  # (N, A)
-        anchor_idxs = np.argmax(iou, axis=-1)  # (N,)
+        best_anchor_idxs = np.argmax(iou, axis=-1)  # (N,)
 
         for i, bbox in enumerate(bboxes):
-            search = np.where(self.mask == anchor_idxs[i])
-            layer_idx = search[0][0]
-            anchor_idx = search[1][0]
+            exist_positive = False
+            iou_mask = iou[i] > 0.3
 
-            coord_xy = (bbox[0:2] + bbox[2:4]) * 0.5
-            coord_xy /= self.strides[layer_idx]
-            coord_xy = coord_xy.astype(np.int)
+            if np.any(iou_mask):
 
-            bboxes_label[layer_idx][coord_xy[1], coord_xy[0], anchor_idx, :4] = bbox
-            bboxes_label[layer_idx][coord_xy[1], coord_xy[0], anchor_idx, 4:5] = 1.
-            bboxes_label[layer_idx][coord_xy[1], coord_xy[0], anchor_idx, 5:] = labels[i, :]
+                for j in range(len(self.strides)):
+                    coord_xy = (bbox[0:2] + bbox[2:4]) * 0.5
+                    coord_xy /= self.strides[j]
+                    coord_xy = coord_xy.astype(np.int)
+
+                    bboxes_label[j][coord_xy[1], coord_xy[0], iou_mask[3 * j:3 * (j + 1)], :4] = bbox
+                    bboxes_label[j][coord_xy[1], coord_xy[0], iou_mask[3 * j:3 * (j + 1)], 4:5] = 1.
+                    bboxes_label[j][coord_xy[1], coord_xy[0], iou_mask[3 * j:3 * (j + 1)], 5:] = labels[i, :]
+
+                exist_positive = True
+
+            if not exist_positive:
+                search = np.where(self.mask == best_anchor_idxs[i])
+                best_detect = search[0][0]
+                best_anchor = search[1][0]
+
+                coord_xy = (bbox[0:2] + bbox[2:4]) * 0.5
+                coord_xy /= self.strides[best_detect]
+                coord_xy = coord_xy.astype(np.int)
+
+                bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, :4] = bbox
+                bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, 4:5] = 1.
+                bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, 5:] = labels[i, :]
 
         return [layer.reshape([layer.shape[0], layer.shape[1], -1]) for layer in bboxes_label]
 
