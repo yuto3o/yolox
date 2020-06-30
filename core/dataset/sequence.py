@@ -105,10 +105,6 @@ class Dataset(Sequence):
         bboxes_label = [np.zeros((size, size, len(mask_per_layer), 5 + self.num_classes), np.float32)
                         for size, mask_per_layer in zip(self._grid_size, self.mask)]
 
-        # !!! default mixup weight should be 1. not 0.
-        for i in range(len(self.mask)):
-            bboxes_label[i][:, :, :, 5:6] = 1.
-
         bboxes = np.array(bboxes, dtype=np.float32)
         # calculate anchor index for true boxes
         anchor_area = self.anchors[:, 0] * self.anchors[:, 1]
