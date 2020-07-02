@@ -25,7 +25,7 @@ train:
   label_smoothing: true
   normal_method: true
 
-  ignore_threshold: 0.7
+  ignore_threshold: 0.5
 
 test:
   anno_path: "./data/pascal_voc/test.txt"

@@ -1,20 +1,20 @@
 yolo:
-  type: "yolov3"
+  type: "yolovx"
   iou_threshold: 0.5
   score_threshold: 0.005
   max_boxes: 100
-  strides: "32,16,8"
-  anchors: "10,13 16,30 33,23 30,61 62,45 59,119 116,90 156,198 373,326"
-  mask: "6,7,8 3,4,5 0,1,2"
+  strides: "32,16"
+  anchors: "23,27 37,58 81,82 81,82 135,169 344,319"
+  mask: "3,4,5 0,1,2"
   name_path: "./data/pascal_voc/voc.name"
 
 train:
-  label: "voc_yolov3"
+  label: "voc_yolovx_SM_DM_CIoU_FL"
   anno_path: "./data/pascal_voc/train.txt"
   image_size: "320,352,384,416,448,480,512,544,576,608"
 
-  batch_size: 2
-  init_weight_path: "./ckpts/yolov3.h5"
+  batch_size: 4
+  init_weight_path: "./ckpts/yolov4-tiny.h5"
   save_weight_path: "./ckpts"
 
   loss_type: "CIoU+FL"
@@ -22,7 +22,7 @@ train:
   mix_up: false
   cut_mix: false
   mosaic: false
-  label_smoothing: true
+  label_smoothing: false
   normal_method: true
 
   ignore_threshold: 0.5

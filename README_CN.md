@@ -1,10 +1,10 @@
 # More Than YOLO
 
-TensorFlow & Keras Implementations & Python
+TensorFlow & Keras & Python
 
 YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny
 
-Unofficial-YOLOv4-tiny（非官方）
+[**非官方**]YOLOv4-tiny, YOLOx
 
 **requirements:** TensorFlow 2.x (not test on 1.x), OpenCV, Numpy, PyYAML
 
@@ -72,45 +72,40 @@ path/to/image2 x1,y1,x2,y2,label
 ### 1.2 Configure 
 
 ```yaml
-# voc_yolov3_tiny.yaml
+# coco_yolov4.yaml
 yolo:
-  type: "yolov3_tiny" # 当前只能是 'yolov3', 'yolov3_tiny', 'yolov4', 'yolov4_tiny'
+  type: "yolov4"  # 当前只能是 'yolov3', 'yolov3_tiny', 'yolov4', 'yolov4_tiny' ‘unofficial_yolov4_tiny’ 和 'yolox'.
   iou_threshold: 0.5
   score_threshold: 0.005
   max_boxes: 100
-  strides: "32,16"
-  anchors: "10,14 23,27 37,58 81,82 135,169 344,319"
-  mask: "3,4,5 0,1,2"
+  strides: "32,16,8"
+  anchors: "12,16 19,36 40,28 36,75 76,55 72,146 142,110 192,243 459,401"
+  mask: "6,7,8 3,4,5 0,1,2"
+  name_path: "./data/coco/coco.name"
 
 train:
-  label: "voc_yolov3_tiny" # 决定了LOG的根目录名，比较随意
-  name_path: "./data/pascal_voc/voc.name"
-  anno_path: "./data/pascal_voc/train.txt"
-  # 当甚至为单一值时，比如"416"，表示使用单一图像训练尺度； 而"352,384,416,448,480" 则使用动态多尺度训练策略。
-  image_size: "416" 
+  label: "coco_yolov4" # 决定了LOG的根目录名，比较随意
+  anno_path: "./data/coco/train2017.txt"
+  image_size: "320,352,384,416,448,480,512,544,576,608"  # 当设置为单一值时，比如"416"，表示使用单一图像训练尺度； 而"352,384,416,448,480" 则使用动态多尺度训练策略。
 
   batch_size: 4
-  # 在载入权重前，你需要尽量保证网络结果一致，特别是darknet权重；而使用keras权重时，支持按层名导入。如果你想在官方COCO权重的基础上训练，可以直接使用COCO的网络配置，或者是先将darknet权重转为keras形式（只需向网络载入一次darknet权重，再保存权重就完成了转换）。
-  init_weight_path: "./ckpts/yolov3-tiny.h5"
+  init_weight_path: "./ckpts/yolov4.weights" # 在载入权重前，你需要尽量保证网络结果一致，特别是darknet权重；而使用keras权重时，支持按层名导入。如果你想在官方COCO权重的基础上训练，可以直接使用COCO的网络配置，或者是先将darknet权重转为keras形式（只需向网络载入一次darknet权重，再保存权重就完成了转换）。
   save_weight_path: "./ckpts"
 
-  # 支持 "L2", "DIoU", "GIoU", "CIoU"，或者以+分格的"L2+FL"开启Focal Loss
-  loss_type: "L2" 
+  loss_type: "CIoU+FL" # 支持 "L2", "DIoU", "GIoU", "CIoU"，或者以+分格的"L2+FL"开启Focal Loss
   
   # 一些策略的开关
-  mix_up: false
-  cut_mix: false
   mosaic: false
   label_smoothing: false
   normal_method: true
 
-  ignore_threshold: 0.5
+  ignore_threshold: 0.7
 
 test:
-  anno_path: "./data/pascal_voc/test.txt"
-  image_size: "416" # 验证模型时的图像尺寸
+  anno_path: "./data/coco/val2017.txt"
+  image_size: "608" # 验证模型时的图像尺寸
   batch_size: 1 # 占位，还不支持
-  init_weight_path: ""
+  init_weight_path: "./ckpts/yolov4.weights"
 ```
 
 ### 1.3 K-Means
@@ -190,7 +185,7 @@ cv2.waitKey()
 !!! 请先阅读上一节的内容 (e.g. 1.1, 1.2).
 
 ```shell
-python train.py --config=./cfgs/voc_yolov4.yaml
+python train.py --config=./cfgs/coco_yolov4.yaml
 ```
 
 ## 3. Experiment
@@ -206,6 +201,7 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | YOLOv4      | 344 ms  | 490 ms  | 682 ms  |
 | YOLOv4-tiny | 51 ms   | 66 ms   | 83 ms  |
 | Unofficial-YOLOv4-tiny | 64 ms   | 86 ms   | 110 ms  |
+| YOLOx |  |  |  |
 
 **i7-9700F+16GB / RTX 2070S+8G**
 
@@ -216,6 +212,7 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | YOLOv4      | 73 ms   | 74 ms   | 91 ms   |
 | YOLOv4-tiny | 30 ms   | 32 ms   | 35 ms  |
 | Unofficial-YOLOv4-tiny | 30 ms   | 31 ms   | 34 ms   |
+| YOLOx |  |  |  |
 
 ### 3.2 Logs
 
@@ -227,8 +224,6 @@ python train.py --config=./cfgs/voc_yolov4.yaml
 | Dynamic Mini Batch Size | DM   |
 | Label Smoothing         | LS   |
 | Focal Loss              | FL   |
-| Mix Up                  | MU   |
-| Cut Mix                 | CM   |
 | Mosaic                  | M    |
 | Warm-up LR              | W    |
 | Cosine Annealing LR     | CA   |
@@ -260,13 +255,6 @@ Standard Method Package 包括 Flip left and right,  Crop and Zoom(jitter=0.3), 
 | ✔    | ✔    |      | ✔    |      | CIoU |  |   |  |
 | ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
-**Unofficial-YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
-
-| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
-| ✔    | ✔    |      | ✔    |      | CIoU | 35.0 | 65.7  | 33.8 |
-| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
-
 **YOLOv4**(TODO; Pretrained on COCO;  Trained on VOC)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
@@ -274,21 +262,37 @@ Standard Method Package 包括 Flip left and right,  Crop and Zoom(jitter=0.3), 
 | ✔    | ✔    | ✔    | ✔    |      | CIoU |      |       |       |
 | ✔    | ✔    | ✔    | ✔    | ✔    | CIoU |      |       |       |
 
+**Unofficial-YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
+
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    |      | ✔    |      | CIoU | 35.0 | 65.7  | 33.8  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
+
+**YOLOx**(TODO; Pretrained on COCO, part of YOLOv4-tiny weights; Trained on VOC)
+
+| SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
+| ✔    | ✔    |      | ✔    |      | CIoU |      |       |       |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
+
 ### 3.3 训练细节
 
 #### Tiny Version
 
-| Stage | Freeze Backbone | LR   | Epoch |
-| ----- | --------------- | ---- | ----- |
-| 1     | Yes             | 1e-4 | 30    |
-| 2     | No              | 1e-5 | 50    |
+| Stage | Freeze Backbone | LR                   | Steps   |
+| ----- | --------------- | -------------------- | ------- |
+| 0     | Yes             | 1e-3 (w/ W)          | 4000    |
+| 1     | Yes             | -                    | 32*4000 |
+| 2     | No              | 1e-3 to 1e-6 (w/ CA) | 48*4000 |
 
 #### Common Version
 
-| Stage | Freeze Backbone | LR                   | Steps |
-| ----- | --------------- | -------------------- | ----- |
-| 1     | Yes             | 5e-4 (w/ W)          | 16000 |
-| 2     | Yes             | 5e-4 to 1e-6 (w/ CA) | N     |
+| Stage | Freeze Backbone | LR                   | Steps    |
+| ----- | --------------- | -------------------- | -------- |
+| 0     | Yes             | 1e-3 (w/ W)          | 4000     |
+| 1     | Yes             | -                    | 80*4000  |
+| 2     | No              | 1e-3 to 1e-6 (w/ CA) | 120*4000 |
 
 训练完整的网络实在太费时间。
 

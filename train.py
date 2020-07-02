@@ -10,7 +10,6 @@ from core.dataset import Dataset
 from core.callbacks import COCOEvalCheckpoint, CosineAnnealingScheduler, WarmUpScheduler
 from core.utils.optimizers import Accumulative
 
-
 flags.DEFINE_string('config', '', 'path to config file')
 FLAGS = flags.FLAGS
 
@@ -24,31 +23,36 @@ def main(_argv):
         from core.model.one_stage.yolov3 import YOLOv3 as Model
         from core.model.one_stage.yolov3 import YOLOLoss as Loss
         num = 186
-        epochs = 500
+        epochs = 200
     elif model_type == 'yolov3_tiny':
         from core.model.one_stage.yolov3 import YOLOv3_Tiny as Model
         from core.model.one_stage.yolov3 import YOLOLoss as Loss
         num = 29
-        epochs = 50
+        epochs = 80
     elif model_type == 'yolov4':
         from core.model.one_stage.yolov4 import YOLOv4 as Model
         from core.model.one_stage.yolov4 import YOLOLoss as Loss
         num = 251
-        epochs = 500
+        epochs = 200
     elif model_type == 'yolov4_tiny':
         from core.model.one_stage.yolov4 import YOLOv4_Tiny as Model
         from core.model.one_stage.yolov4 import YOLOLoss as Loss
         num = 61
-        epochs = 50
+        epochs = 80
+    elif model_type == 'yolovx':
+        from core.model.one_stage.custom import YOLOX as Model
+        from core.model.one_stage.custom import YOLOLoss as Loss
+        num = 61
+        epochs = 80
     elif model_type == 'unofficial_yolov4_tiny':
-        from core.model.one_stage.yolov4 import Unofficial_YOLOv4_Tiny as Model
-        from core.model.one_stage.yolov4 import YOLOLoss as Loss
+        from core.model.one_stage.custom import Unofficial_YOLOv4_Tiny as Model
+        from core.model.one_stage.custom import YOLOLoss as Loss
         num = 29
-        epochs = 50
+        epochs = 80
     else:
         raise NotImplementedError()
 
-    epoch_steps = 3000
+    epoch_steps = 4000
 
     model, eval_model = Model(cfg)
     model.summary()
@@ -76,7 +80,7 @@ def main(_argv):
     ckpt_path = os.path.join(cfg["train"]["save_weight_path"], 'tmp', cfg["train"]["label"],
                              time.strftime("%Y%m%d%H%M", time.localtime()))
 
-    warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=epoch_steps, verbose=1)]
+    warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=1 * epoch_steps, verbose=1)]
 
     eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
                                         eval_model=eval_model,
@@ -106,22 +110,22 @@ def main(_argv):
               callbacks=warmup_callback
               )
 
-    for i in range(len(model.layers)): model.layers[i].trainable = True
-    print('Unfreeze all layers.')
-
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=epoch_steps,
-              epochs=epochs,
+              epochs=epochs // 5 * 2,
               callbacks=eval_callback + lr_callback
               )
 
+    for i in range(len(model.layers)): model.layers[i].trainable = True
+    print('Unfreeze all layers.')
+
     # reset sample rate
-    model.compile(loss=loss, optimizer=optimizers.Adam(lr=1e-7), run_eagerly=False)
+    model.compile(loss=loss, optimizer=opt, run_eagerly=False)
     model.fit(train_dataset,
               steps_per_epoch=epoch_steps,
-              epochs=10,
-              callbacks=eval_callback
+              epochs=epochs // 5 * 3,
+              callbacks=eval_callback + lr_callback
               )
 
 

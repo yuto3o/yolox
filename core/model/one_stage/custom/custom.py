@@ -44,31 +44,9 @@ def DarknetConv2D_BN_Mish(*args, **kwargs):
     return wrapper
 
 
-def DarknetBlock(num_filters, niter, all_narrow=True):
-    '''A series of resblocks starting with a downsampling Convolution2D'''
-
-    # Darknet uses left and top padding instead of 'same' mode
-    def wrapper(x):
-        x = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(x)
-        x = DarknetConv2D_BN_Mish(num_filters, (3, 3), strides=(2, 2))(x)
-        shortcut = DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (1, 1))(x)
-        x = DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (1, 1))(x)
-        for _ in range(niter):
-            y = DarknetConv2D_BN_Mish(num_filters // 2, (1, 1))(x)
-            y = DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (3, 3))(y)
-
-            x = tf.keras.layers.Add()([x, y])
-        x = DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (1, 1))(x)
-        x = tf.keras.layers.Concatenate()([x, shortcut])
-        x = DarknetConv2D_BN_Mish(num_filters, (1, 1))(x)
-        return x
-
-    return wrapper
-
-
-def YOLOv4_Tiny(cfg,
-                input_size=None,
-                name=None):
+def YOLOX(cfg,
+          input_size=None,
+          name=None):
     iou_threshold = cfg["yolo"]["iou_threshold"]
     score_threshold = cfg["yolo"]["score_threshold"]
     max_outputs = cfg["yolo"]["max_boxes"]
@@ -124,30 +102,44 @@ def YOLOv4_Tiny(cfg,
     x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
 
     x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
+    maxpool1 = tf.keras.layers.MaxPooling2D(pool_size=(13, 13), strides=(1, 1), padding='same')(x)
+    maxpool2 = tf.keras.layers.MaxPooling2D(pool_size=(9, 9), strides=(1, 1), padding='same')(x)
+    maxpool3 = tf.keras.layers.MaxPooling2D(pool_size=(5, 5), strides=(1, 1), padding='same')(x)
+    x = tf.keras.layers.Concatenate()([maxpool1, maxpool2, maxpool3, x])
 
-    _x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    output_0 = DarknetConv2D(len(mask[0]) * (num_classes + 5), (1, 1))(_x)
+    x = x_19 = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
 
-    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x)
-    x = tf.keras.layers.UpSampling2D(2)(x)
-    x = tf.keras.layers.Concatenate()([x, x_23])
+    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
+    x19_upsample = tf.keras.layers.UpSampling2D(2)(x)
 
+    # 38x38 head
+    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x_23)
+    x = tf.keras.layers.Concatenate()([x, x19_upsample])
+    x = x_38 = DarknetConv2D_BN_Leaky(128, (1, 1))(x)
+
+    # 38x38 output
     x = DarknetConv2D_BN_Leaky(256, (3, 3))(x)
-    output_1 = DarknetConv2D(len(mask[1]) * (num_classes + 5), (1, 1))(x)
+    output_1 = DarknetConv2D(len(mask[0]) * (num_classes + 5), (1, 1))(x)
+
+    x = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(x_38)
+    x = DarknetConv2D_BN_Leaky(256, (3, 3), strides=(2, 2))(x)
+    x = tf.keras.layers.Concatenate()([x, x_19])
+    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
+
+    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
+    output_0 = DarknetConv2D(len(mask[1]) * (num_classes + 5), (1, 1))(x)
 
     model = tf.keras.Model(inputs, [output_0, output_1], name=name)
-
     outputs = Header(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
         (output_0, output_1))
-
     eval_model = tf.keras.Model(inputs, outputs, name=name)
 
     return model, eval_model
 
 
-def YOLOv4(cfg,
-           input_size=None,
-           name=None):
+def Unofficial_YOLOv4_Tiny(cfg,
+                           input_size=None,
+                           name=None):
     iou_threshold = cfg["yolo"]["iou_threshold"]
     score_threshold = cfg["yolo"]["score_threshold"]
     max_outputs = cfg["yolo"]["max_boxes"]
@@ -163,85 +155,52 @@ def YOLOv4(cfg,
 
     x = PreprocessInput()(x)
 
-    x = DarknetConv2D_BN_Mish(32, (3, 3))(x)
-    x = DarknetBlock(64, 1, False)(x)
-    x = DarknetBlock(128, 2)(x)
-    x = x_131 = DarknetBlock(256, 8)(x)
-    x = x_204 = DarknetBlock(512, 8)(x)
-    x = DarknetBlock(1024, 4)(x)
+    x = DarknetConv2D_BN_Mish(16, 3)(x)
+    x = tf.keras.layers.MaxPool2D(2, 2, "same")(x)
+    x = DarknetConv2D_BN_Mish(32, 3)(x)
+    x = tf.keras.layers.MaxPool2D(2, 2, "same")(x)
+    x = DarknetConv2D_BN_Mish(64, 3)(x)
+    x = tf.keras.layers.MaxPool2D(2, 2, "same")(x)
+    x = DarknetConv2D_BN_Mish(128, 3)(x)
+    x = tf.keras.layers.MaxPool2D(2, 2, "same")(x)
+    x = x_8 = DarknetConv2D_BN_Mish(256, 3)(x)
+    x = tf.keras.layers.MaxPool2D(2, 2, "same")(x)
+    x = DarknetConv2D_BN_Mish(512, 3)(x)
+    x = tf.keras.layers.MaxPool2D(2, 1, "same")(x)
+    x = DarknetConv2D_BN_Mish(1024, 3)(x)
 
     # 19x19 head
-    x = DarknetConv2D_BN_Leaky(512, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(1024, (3, 3))(x)
-    x = DarknetConv2D_BN_Leaky(512, (1, 1))(x)
-
-    maxpool1 = tf.keras.layers.MaxPooling2D(pool_size=(13, 13), strides=(1, 1), padding='same')(x)
-    maxpool2 = tf.keras.layers.MaxPooling2D(pool_size=(9, 9), strides=(1, 1), padding='same')(x)
-    maxpool3 = tf.keras.layers.MaxPooling2D(pool_size=(5, 5), strides=(1, 1), padding='same')(x)
-
-    x = tf.keras.layers.Concatenate()([maxpool1, maxpool2, maxpool3, x])
-    x = DarknetConv2D_BN_Leaky(512, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(1024, (3, 3))(x)
-    x = x_19 = DarknetConv2D_BN_Leaky(512, (1, 1))(x)
-
     x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
+    maxpool1 = tf.keras.layers.MaxPooling2D(pool_size=(9, 9), strides=(1, 1), padding='same')(x)
+    maxpool2 = tf.keras.layers.MaxPooling2D(pool_size=(5, 5), strides=(1, 1), padding='same')(x)
+    x = tf.keras.layers.Concatenate()([maxpool1, maxpool2, x])
+    # 19x19 head
+    x = x_19 = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
+    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
     x19_upsample = tf.keras.layers.UpSampling2D(2)(x)
 
     # 38x38 head
-    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x_204)
+    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x_8)
     x = tf.keras.layers.Concatenate()([x, x19_upsample])
-    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    x = x_38 = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-
-    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x)
-    x38_upsample = tf.keras.layers.UpSampling2D(2)(x)
-
-    # 76x76 head
-    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x_131)
-    x = tf.keras.layers.Concatenate()([x, x38_upsample])
-    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(256, (3, 3))(x)
-    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(256, (3, 3))(x)
-    x = x_76 = DarknetConv2D_BN_Leaky(128, (1, 1))(x)
-
-    # 76x76 output
-    x = DarknetConv2D_BN_Leaky(256, (3, 3))(x)
-    output_2 = DarknetConv2D(len(mask[2]) * (num_classes + 5), (1, 1))(x)
+    x = x_38 = DarknetConv2D_BN_Leaky(128, (1, 1))(x)
 
     # 38x38 output
-    x = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(x_76)
-    x = DarknetConv2D_BN_Leaky(256, (3, 3), strides=(2, 2))(x)
-    x = tf.keras.layers.Concatenate()([x, x_38])
-    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    x = x_38 = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
+    x = DarknetConv2D_BN_Leaky(256, (3, 3))(x)
+    output_1 = DarknetConv2D(len(mask[0]) * (num_classes + 5), (1, 1))(x)
 
-    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-    output_1 = DarknetConv2D(len(mask[2]) * (num_classes + 5), (1, 1))(x)
-
-    # 19x19 output
     x = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(x_38)
-    x = DarknetConv2D_BN_Leaky(512, (3, 3), strides=(2, 2))(x)
+    x = DarknetConv2D_BN_Leaky(256, (3, 3), strides=(2, 2))(x)
     x = tf.keras.layers.Concatenate()([x, x_19])
-    x = DarknetConv2D_BN_Leaky(512, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(1024, (3, 3))(x)
-    x = DarknetConv2D_BN_Leaky(512, (1, 1))(x)
-    x = DarknetConv2D_BN_Leaky(1024, (3, 3))(x)
-    x = DarknetConv2D_BN_Leaky(512, (1, 1))(x)
+    x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
 
-    x = DarknetConv2D_BN_Leaky(1024, (3, 3))(x)
-    output_0 = DarknetConv2D(len(mask[2]) * (num_classes + 5), (1, 1))(x)
+    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
+    output_0 = DarknetConv2D(len(mask[1]) * (num_classes + 5), (1, 1))(x)
 
-    model = tf.keras.Model(inputs, [output_0, output_1, output_2], name=name)
+    model = tf.keras.Model(inputs, [output_0, output_1], name=name)
 
     outputs = Header(num_classes, anchors, mask, strides, max_outputs, iou_threshold, score_threshold)(
-        (output_0, output_1, output_2))
+        (output_0, output_1))
+
     eval_model = tf.keras.Model(inputs, outputs, name=name)
 
     return model, eval_model
@@ -478,56 +437,3 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         return box_loss + obj_loss + cls_loss
 
     return wrapper
-
-
-if __name__ == '__main__':
-    import os
-
-    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-    x = inputs = tf.keras.Input([None, None, 3])
-    x = PreprocessInput()(x)
-
-    x = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(x)
-    x = DarknetConv2D_BN_Leaky(32, 3, strides=(2, 2))(x)  # 0
-    x = tf.keras.layers.ZeroPadding2D(((1, 0), (1, 0)))(x)
-    x = DarknetConv2D_BN_Leaky(64, (3, 3), strides=(2, 2))(x)  # 1
-    x = DarknetConv2D_BN_Leaky(64, (3, 3))(x)  # 2
-
-    route = x
-    x = RouteGroup(2, 1)(x)  # 3
-    x = DarknetConv2D_BN_Leaky(32, (3, 3))(x)  # 4
-    route_1 = x
-    x = DarknetConv2D_BN_Leaky(32, (3, 3))(x)  # 5
-    x = tf.keras.layers.Concatenate()([x, route_1])  # 6
-    x = DarknetConv2D_BN_Leaky(64, (1, 1))(x)  # 7
-    x = tf.keras.layers.Concatenate()([route, x])  # 8
-    x = tf.keras.layers.MaxPooling2D(2, 2, padding='same')(x)  # 9
-
-    x = DarknetConv2D_BN_Leaky(128, (3, 3))(x)  # 10
-    route = x
-    x = RouteGroup(2, 1)(x)  # 11
-    x = DarknetConv2D_BN_Leaky(64, (3, 3))(x)  # 12
-    route_1 = x
-    x = DarknetConv2D_BN_Leaky(64, (3, 3))(x)  # 13
-    x = tf.keras.layers.Concatenate()([x, route_1])  # 14
-    x = DarknetConv2D_BN_Leaky(128, (1, 1))(x)  # 15
-    x = tf.keras.layers.Concatenate()([route, x])  # 16
-    x = tf.keras.layers.MaxPooling2D(2, 2, padding='same')(x)  # 17
-
-    x = DarknetConv2D_BN_Leaky(256, (3, 3))(x)  # 18
-    route = x
-    x = RouteGroup(2, 1)(x)  # 19
-    x = DarknetConv2D_BN_Leaky(128, (3, 3))(x)  # 20
-    route_1 = x
-    x = DarknetConv2D_BN_Leaky(128, (3, 3))(x)  # 21
-    x = tf.keras.layers.Concatenate()([x, route_1])  # 22
-    x = x_23 = DarknetConv2D_BN_Leaky(256, (1, 1))(x)  # 23
-    x = tf.keras.layers.Concatenate()([route, x])  # 24
-    x = tf.keras.layers.MaxPooling2D(2, 2, padding='same')(x)  # 25
-
-    x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
-
-    model = tf.keras.Model(inputs, x)
-    model.summary()
-    print(len(model.layers))
