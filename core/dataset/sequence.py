@@ -24,8 +24,6 @@ class Dataset(Sequence):
         self.batch_size = cfg["train"]["batch_size"]
 
         self.normal_method = cfg['train']["normal_method"]
-        self.mix_up = cfg['train']["mix_up"]
-        self.cut_mix = cfg['train']['cut_mix']
         self.mosaic = cfg['train']['mosaic']
         self.label_smoothing = cfg['train']["label_smoothing"]
 
@@ -118,34 +116,18 @@ class Dataset(Sequence):
         best_anchor_idxs = np.argmax(iou, axis=-1)  # (N,)
 
         for i, bbox in enumerate(bboxes):
-            exist_positive = False
-            iou_mask = iou[i] > 0.3
+            
+            search = np.where(self.mask == best_anchor_idxs[i])
+            best_detect = search[0][0]
+            best_anchor = search[1][0]
 
-            if np.any(iou_mask):
+            coord_xy = (bbox[0:2] + bbox[2:4]) * 0.5
+            coord_xy /= self.strides[best_detect]
+            coord_xy = coord_xy.astype(np.int)
 
-                for j in range(len(self.strides)):
-                    coord_xy = (bbox[0:2] + bbox[2:4]) * 0.5
-                    coord_xy /= self.strides[j]
-                    coord_xy = coord_xy.astype(np.int)
-
-                    bboxes_label[j][coord_xy[1], coord_xy[0], iou_mask[3 * j:3 * (j + 1)], :4] = bbox
-                    bboxes_label[j][coord_xy[1], coord_xy[0], iou_mask[3 * j:3 * (j + 1)], 4:5] = 1.
-                    bboxes_label[j][coord_xy[1], coord_xy[0], iou_mask[3 * j:3 * (j + 1)], 5:] = labels[i, :]
-
-                exist_positive = True
-
-            if not exist_positive:
-                search = np.where(self.mask == best_anchor_idxs[i])
-                best_detect = search[0][0]
-                best_anchor = search[1][0]
-
-                coord_xy = (bbox[0:2] + bbox[2:4]) * 0.5
-                coord_xy /= self.strides[best_detect]
-                coord_xy = coord_xy.astype(np.int)
-
-                bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, :4] = bbox
-                bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, 4:5] = 1.
-                bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, 5:] = labels[i, :]
+            bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, :4] = bbox
+            bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, 4:5] = 1.
+            bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, 5:] = labels[i, :]
 
         return [layer.reshape([layer.shape[0], layer.shape[1], -1]) for layer in bboxes_label]
 

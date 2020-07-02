@@ -19,8 +19,6 @@ train:
 
   loss_type: "CIoU+FL"
 
-  mix_up: false
-  cut_mix: false
   mosaic: false
   label_smoothing: false
   normal_method: true

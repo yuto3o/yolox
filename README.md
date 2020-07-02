@@ -263,8 +263,8 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
-| ✔    | ✔    | ✔    | ✔    |      | CIoU |      |       |       |
-| ✔    | ✔    | ✔    | ✔    | ✔    | CIoU |      |       |       |
+| ✔    | ✔    |      | ✔    |      | CIoU |      |       |       |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
 **Unofficial-YOLOv4-tiny**(TODO; Pretrained on COCO, part of YOLOv3-tiny weights; Trained on VOC)
 
@@ -277,7 +277,7 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
-| ✔    | ✔    |      | ✔    |      | CIoU |      |       |       |
+| ✔    | ✔    |      | ✔    |      | CIoU | 40.6 | 72.2  | 40.3  |
 | ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
 ### 3.3 Details
