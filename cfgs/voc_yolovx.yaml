@@ -1,5 +1,5 @@
 yolo:
-  type: "yolovx"
+  type: "yolox"
   iou_threshold: 0.5
   score_threshold: 0.005
   max_boxes: 100

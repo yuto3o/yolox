@@ -36,6 +36,8 @@ def main(_argv):
         from core.model.one_stage.yolov4 import YOLOv4 as Model
     elif model_type == 'yolov4_tiny':
         from core.model.one_stage.yolov4 import YOLOv4_Tiny as Model
+    elif model_type == 'yolox':
+        from core.model.one_stage.custom import YOLOX as Model
     else:
         raise NotImplementedError()
 

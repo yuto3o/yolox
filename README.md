@@ -8,7 +8,7 @@ TensorFlow & Keras & Python
 
 YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny
 
-[**Unofficial**] YOLOv4-tiny, YOLOx
+[**Unofficial**] YOLOv4-tiny, YOLOX
 
 **requirements:** TensorFlow 2.x (not test on 1.x), OpenCV, Numpy, PyYAML
 
@@ -205,7 +205,7 @@ python train.py --config=./cfgs/coco_yolov4.yaml
 | YOLOv4      | 344 ms  | 490 ms  | 682 ms  |
 | YOLOv4-tiny | 51 ms   | 66 ms   | 83 ms  |
 | Unofficial-YOLOv4-tiny | 64 ms   | 86 ms   | 110 ms  |
-| YOLOx |  |  |  |
+| YOLOX | 67 ms | 83 ms | 104 ms |
 
 **i7-9700F+16GB / RTX 2070S+8G**
 
@@ -216,7 +216,7 @@ python train.py --config=./cfgs/coco_yolov4.yaml
 | YOLOv4      | 73 ms   | 74 ms   | 91 ms   |
 | YOLOv4-tiny | 30 ms   | 32 ms   | 35 ms  |
 | Unofficial-YOLOv4-tiny | 30 ms   | 31 ms   | 34 ms   |
-| YOLOx |  |  |  |
+| YOLOX | 42 ms | 45 ms | 50 ms |
 
 ### 3.2 Logs
 
@@ -256,8 +256,8 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
-| ✔    | ✔    | ✔    | ✔    |      | CIoU |      |       |       |
-| ✔    | ✔    | ✔    | ✔    | ✔    | CIoU |      |       |       |
+| ✔    | ✔    |      | ✔    |      | CIoU | 35.1 | 70.2  | 30.0  |
+| ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
 **YOLOv4**(TODO; Pretrained on COCO;  Trained on VOC)
 
@@ -273,7 +273,7 @@ Standard Method Package includes Flip left and right,  Crop and Zoom(jitter=0.3)
 | ✔    | ✔    |      | ✔    |      | CIoU | 35.0 | 65.7  | 33.8  |
 | ✔    | ✔    |      | ✔    | ✔    | CIoU |      |       |       |
 
-**YOLOx**(TODO; Pretrained on COCO, part of YOLOv4-tiny weights; Trained on VOC)
+**YOLOX**(TODO; Pretrained on COCO, part of YOLOv4-tiny weights; Trained on VOC)
 
 | SM   | DM   | LS   | FL   | M    | Loss | AP   | AP@50 | AP@75 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- | ----- |
