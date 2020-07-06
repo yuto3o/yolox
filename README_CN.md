@@ -6,7 +6,7 @@ YOLOv3, YOLOv3-tiny, YOLOv4, YOLOv4-tiny
 
 [**非官方**]YOLOv4-tiny, YOLOX
 
-**requirements:** TensorFlow 2.x (not test on 1.x), OpenCV, Numpy, PyYAML
+**requirements:** TensorFlow 2.1 (not test on 1.x), OpenCV, Numpy, PyYAML
 
 ---
 
