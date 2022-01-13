@@ -52,11 +52,11 @@ def main(_argv):
     else:
         raise NotImplementedError()
 
-    epoch_steps = 4000
-
     model, eval_model = Model(cfg)
     model.summary()
+
     train_dataset = Dataset(cfg)
+    epoch_steps = len(train_dataset) * cfg['train']['train_times']
 
     init_weight = cfg["train"]["init_weight_path"]
     anchors = cfg['yolo']['anchors']
@@ -80,11 +80,13 @@ def main(_argv):
     ckpt_path = os.path.join(cfg["train"]["save_weight_path"], 'tmp', cfg["train"]["label"],
                              time.strftime("%Y%m%d%H%M", time.localtime()))
 
-    warmup_callback = [WarmUpScheduler(learning_rate=1e-3, warmup_step=1 * epoch_steps, verbose=1)]
+    warmup_callback = [WarmUpScheduler(
+        learning_rate=1e-3, warmup_step=1 * epoch_steps, verbose=1)]
 
-    eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}.h5"),
+    eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, "mAP-{mAP:.4f}"),
                                         eval_model=eval_model,
                                         model_cfg=cfg,
+                                        only_save_weight=False,
                                         verbose=1)
                      ]
     lr_callback = [CosineAnnealingScheduler(learning_rate=1e-3,
@@ -101,9 +103,14 @@ def main(_argv):
     for i in range(num):
         model.layers[i].trainable = False
         print(model.layers[i].name)
-    print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))
+    print('Freeze the first {} layers of total {} layers.'.format(
+        num, len(model.layers)))
 
     model.compile(loss=loss, optimizer=opt, run_eagerly=False)
+
+    from tensorflow.python.keras.utils.data_utils import iter_sequence_infinite
+    train_dataset = iter_sequence_infinite(train_dataset)
+
     model.fit(train_dataset,
               steps_per_epoch=epoch_steps,
               epochs=1,
@@ -117,7 +124,8 @@ def main(_argv):
               callbacks=eval_callback + lr_callback
               )
 
-    for i in range(len(model.layers)): model.layers[i].trainable = True
+    for i in range(len(model.layers)):
+        model.layers[i].trainable = True
     print('Unfreeze all layers.')
 
     # reset sample rate

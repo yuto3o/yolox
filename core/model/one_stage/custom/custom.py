@@ -102,9 +102,12 @@ def YOLOX(cfg,
     x = DarknetConv2D_BN_Leaky(512, (3, 3))(x)
 
     x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-    maxpool1 = tf.keras.layers.MaxPooling2D(pool_size=(13, 13), strides=(1, 1), padding='same')(x)
-    maxpool2 = tf.keras.layers.MaxPooling2D(pool_size=(9, 9), strides=(1, 1), padding='same')(x)
-    maxpool3 = tf.keras.layers.MaxPooling2D(pool_size=(5, 5), strides=(1, 1), padding='same')(x)
+    maxpool1 = tf.keras.layers.MaxPooling2D(
+        pool_size=(13, 13), strides=(1, 1), padding='same')(x)
+    maxpool2 = tf.keras.layers.MaxPooling2D(
+        pool_size=(9, 9), strides=(1, 1), padding='same')(x)
+    maxpool3 = tf.keras.layers.MaxPooling2D(
+        pool_size=(5, 5), strides=(1, 1), padding='same')(x)
     x = tf.keras.layers.Concatenate()([maxpool1, maxpool2, maxpool3, x])
 
     x = x_19 = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
@@ -171,8 +174,10 @@ def Unofficial_YOLOv4_Tiny(cfg,
 
     # 19x19 head
     x = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
-    maxpool1 = tf.keras.layers.MaxPooling2D(pool_size=(9, 9), strides=(1, 1), padding='same')(x)
-    maxpool2 = tf.keras.layers.MaxPooling2D(pool_size=(5, 5), strides=(1, 1), padding='same')(x)
+    maxpool1 = tf.keras.layers.MaxPooling2D(
+        pool_size=(9, 9), strides=(1, 1), padding='same')(x)
+    maxpool2 = tf.keras.layers.MaxPooling2D(
+        pool_size=(5, 5), strides=(1, 1), padding='same')(x)
     x = tf.keras.layers.Concatenate()([maxpool1, maxpool2, x])
     # 19x19 head
     x = x_19 = DarknetConv2D_BN_Leaky(256, (1, 1))(x)
@@ -251,7 +256,8 @@ class PreprocessInput(tf.keras.layers.Layer):
         super(PreprocessInput, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        super(PreprocessInput, self).build(input_shape)  # Be sure to call this at the end
+        # Be sure to call this at the end
+        super(PreprocessInput, self).build(input_shape)
 
     def call(self, inputs, **kwargs):
         x = tf.divide(inputs, 255.)
@@ -276,7 +282,8 @@ class Header(tf.keras.layers.Layer):
         super(Header, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        super(Header, self).build(input_shape)  # Be sure to call this at the end
+        # Be sure to call this at the end
+        super(Header, self).build(input_shape)
 
     def call(self, inputs, **kwargs):
         boxes, objects, classes = [], [], []
@@ -284,9 +291,11 @@ class Header(tf.keras.layers.Layer):
         for i, logits in enumerate(inputs):
             anchors, stride = self.anchors[self.mask[i]], self.strides[i]
             x_shape = tf.shape(logits)
-            logits = tf.reshape(logits, (x_shape[0], x_shape[1], x_shape[2], len(anchors), self.num_classes + 5))
+            logits = tf.reshape(
+                logits, (x_shape[0], x_shape[1], x_shape[2], len(anchors), self.num_classes + 5))
 
-            box_xy, box_wh, obj, cls = tf.split(logits, (2, 2, 1, self.num_classes), axis=-1)
+            box_xy, box_wh, obj, cls = tf.split(
+                logits, (2, 2, 1, self.num_classes), axis=-1)
             box_xy = tf.sigmoid(box_xy)
             obj = tf.sigmoid(obj)
             cls = tf.sigmoid(cls)
@@ -295,7 +304,8 @@ class Header(tf.keras.layers.Layer):
             grid_h, grid_w = grid_shape[0], grid_shape[1]
             anchors = tf.cast(anchors, dtype)
             grid = tf.meshgrid(tf.range(grid_w), tf.range(grid_h))
-            grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)  # [gx, gy, 1, 2]
+            grid = tf.expand_dims(tf.stack(grid, axis=-1),
+                                  axis=2)  # [gx, gy, 1, 2]
 
             box_xy = (box_xy + tf.cast(grid, dtype)) * stride
             box_wh = tf.exp(box_wh) * tf.cast(anchors, dtype)
@@ -344,11 +354,15 @@ def _broadcast_iou(box_1, box_2):
     box_1 = tf.broadcast_to(box_1, new_shape)
     box_2 = tf.broadcast_to(box_2, new_shape)
 
-    int_w = tf.maximum(tf.minimum(box_1[..., 2], box_2[..., 2]) - tf.maximum(box_1[..., 0], box_2[..., 0]), 0)
-    int_h = tf.maximum(tf.minimum(box_1[..., 3], box_2[..., 3]) - tf.maximum(box_1[..., 1], box_2[..., 1]), 0)
+    int_w = tf.maximum(tf.minimum(
+        box_1[..., 2], box_2[..., 2]) - tf.maximum(box_1[..., 0], box_2[..., 0]), 0)
+    int_h = tf.maximum(tf.minimum(
+        box_1[..., 3], box_2[..., 3]) - tf.maximum(box_1[..., 1], box_2[..., 1]), 0)
     int_area = int_w * int_h
-    box_1_area = (box_1[..., 2] - box_1[..., 0]) * (box_1[..., 3] - box_1[..., 1])
-    box_2_area = (box_2[..., 2] - box_2[..., 0]) * (box_2[..., 3] - box_2[..., 1])
+    box_1_area = (box_1[..., 2] - box_1[..., 0]) * \
+        (box_1[..., 3] - box_1[..., 1])
+    box_2_area = (box_2[..., 2] - box_2[..., 0]) * \
+        (box_2[..., 3] - box_2[..., 1])
     return int_area / tf.maximum(box_1_area + box_2_area - int_area, 1e-8)
 
 
@@ -359,16 +373,20 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         y_shape = tf.shape(y_pred)
         grid_w, grid_h = y_shape[2], y_shape[1]
         anchors_tensor = tf.cast(anchors, dtype)
-        y_true = tf.reshape(y_true, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 5))
-        y_pred = tf.reshape(y_pred, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 5))
+        y_true = tf.reshape(
+            y_true, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 5))
+        y_pred = tf.reshape(
+            y_pred, (y_shape[0], y_shape[1], y_shape[2], anchors_tensor.shape[0], num_classes + 5))
 
         # 1. transform all pred outputs
         # y_pred: (batch_size, grid, grid, anchors, (x, y, w, h, obj, ...cls))
-        pred_xy, pred_wh, pred_obj, pred_cls = tf.split(y_pred, (2, 2, 1, num_classes), axis=-1)
+        pred_xy, pred_wh, pred_obj, pred_cls = tf.split(
+            y_pred, (2, 2, 1, num_classes), axis=-1)
 
         # !!! grid[x][y] == (y, x)
         grid = tf.meshgrid(tf.range(grid_w), tf.range(grid_h))
-        grid = tf.expand_dims(tf.stack(grid, axis=-1), axis=2)  # [gx, gy, 1, 2]
+        grid = tf.expand_dims(tf.stack(grid, axis=-1),
+                              axis=2)  # [gx, gy, 1, 2]
 
         pred_xy = (tf.sigmoid(pred_xy) + tf.cast(grid, dtype)) * stride
         pred_wh = tf.exp(pred_wh) * anchors_tensor
@@ -382,7 +400,8 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
 
         # 2. transform all true outputs
         # y_true: (batch_size, grid, grid, anchors, (x1, y1, x2, y2, obj, cls))
-        true_box, true_obj, true_cls = tf.split(y_true, (4, 1, num_classes), axis=-1)
+        true_box, true_obj, true_cls = tf.split(
+            y_true, (4, 1, num_classes), axis=-1)
         true_xy = (true_box[..., 0:2] + true_box[..., 2:4]) / 2.
         true_wh = true_box[..., 2:4] - true_box[..., 0:2]
 
@@ -394,15 +413,18 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
         obj_mask = tf.squeeze(true_obj, -1)
         # ignore false positive when iou is over threshold
         best_iou = tf.map_fn(
-            lambda x: tf.reduce_max(_broadcast_iou(x[0], tf.boolean_mask(x[1], tf.cast(x[2], tf.bool))), axis=-1),
+            lambda x: tf.reduce_max(_broadcast_iou(
+                x[0], tf.boolean_mask(x[1], tf.cast(x[2], tf.bool))), axis=-1),
             (pred_box, true_box, obj_mask),
             dtype)
         ignore_mask = tf.cast(best_iou < ignore_thresh, dtype)
 
         # 5. calculate all losses
         if 'L2' in type:
-            xy_loss = 0.5 * tf.reduce_sum(tf.square(true_xy - pred_xy), axis=-1)
-            wh_loss = 0.5 * tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)
+            xy_loss = 0.5 * \
+                tf.reduce_sum(tf.square(true_xy - pred_xy), axis=-1)
+            wh_loss = 0.5 * \
+                tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)
             box_loss = xy_loss + wh_loss
         elif 'GIoU' in type:
             giou = GIoU(pred_box, true_box)
@@ -418,11 +440,14 @@ def YOLOLoss(anchors, stride, num_classes, ignore_thresh, type):
 
         box_loss = obj_mask * box_loss_scale * box_loss
         obj_loss = tf.keras.losses.binary_crossentropy(true_obj, pred_obj)
-        obj_loss = obj_mask * obj_loss + (1 - obj_mask) * ignore_mask * obj_loss
-        cls_loss = obj_mask * tf.keras.losses.binary_crossentropy(true_cls, pred_cls)
+        obj_loss = obj_mask * obj_loss + \
+            (1 - obj_mask) * ignore_mask * obj_loss
+        cls_loss = obj_mask * \
+            tf.keras.losses.binary_crossentropy(true_cls, pred_cls)
 
         def _focal_loss(y_true, y_pred, alpha=1, gamma=2):
-            focal_loss = tf.squeeze(alpha * tf.pow(tf.abs(y_true - y_pred), gamma), axis=-1)
+            focal_loss = tf.squeeze(
+                alpha * tf.pow(tf.abs(y_true - y_pred), gamma), axis=-1)
             return focal_loss
 
         if 'FL' in type:

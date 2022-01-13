@@ -50,7 +50,8 @@ class Dataset(Sequence):
 
         self._on_batch_start(idx)
 
-        batch_image = np.zeros((r_bound - l_bound, self._image_size, self._image_size, 3), dtype=np.float32)
+        batch_image = np.zeros(
+            (r_bound - l_bound, self._image_size, self._image_size, 3), dtype=np.float32)
         batch_label = [np.zeros((r_bound - l_bound, size, size, len(mask_per_layer) * (5 + self.num_classes)),
                                 dtype=np.float32)
                        for size, mask_per_layer in zip(self._grid_size, self.mask)]
@@ -59,7 +60,8 @@ class Dataset(Sequence):
             image, bboxes, labels = self._getitem(sub_idx)
 
             if self.mosaic:
-                sub_idx = np.random.choice(np.delete(np.arange(self.num_anno), idx), 3, False)
+                sub_idx = np.random.choice(
+                    np.delete(np.arange(self.num_anno), idx), 3, False)
                 image2, bboxes2, labels2 = self._getitem(sub_idx[0])
                 image3, bboxes3, labels3 = self._getitem(sub_idx[1])
                 image4, bboxes4, labels4 = self._getitem(sub_idx[2])
@@ -71,7 +73,7 @@ class Dataset(Sequence):
                 image = augment.random_distort(image)
                 image = augment.random_grayscale(image)
                 image, bboxes = augment.random_flip_lr(image, bboxes)
-                image, bboxes = augment.random_rotate(image, bboxes)
+                image, bboxes = augment.random_rotate(image, bboxes, 15.)
                 image, bboxes, labels = augment.random_crop_and_zoom(image, bboxes, labels,
                                                                      (self._image_size, self._image_size))
 
@@ -93,7 +95,8 @@ class Dataset(Sequence):
         else:
             bboxes, labels = np.zeros((0, 4)), np.zeros((0,))
 
-        image, bboxes = preprocess_image(image, (self._image_size, self._image_size), bboxes)
+        image, bboxes = preprocess_image(
+            image, (self._image_size, self._image_size), bboxes)
         labels = augment.onehot(labels, self.num_classes, self.label_smoothing)
 
         return image, bboxes, labels
@@ -108,15 +111,17 @@ class Dataset(Sequence):
         anchor_area = self.anchors[:, 0] * self.anchors[:, 1]
         bboxes_wh = bboxes[:, 2:4] - bboxes[:, 0:2]
 
-        bboxes_wh_exp = np.tile(np.expand_dims(bboxes_wh, 1), (1, self.anchors.shape[0], 1))
+        bboxes_wh_exp = np.tile(np.expand_dims(
+            bboxes_wh, 1), (1, self.anchors.shape[0], 1))
         boxes_area = bboxes_wh_exp[..., 0] * bboxes_wh_exp[..., 1]
         intersection = np.minimum(bboxes_wh_exp[..., 0], self.anchors[:, 0]) * np.minimum(bboxes_wh_exp[..., 1],
                                                                                           self.anchors[:, 1])
-        iou = intersection / (boxes_area + anchor_area - intersection + 1e-8)  # (N, A)
+        iou = intersection / (boxes_area + anchor_area -
+                              intersection + 1e-8)  # (N, A)
         best_anchor_idxs = np.argmax(iou, axis=-1)  # (N,)
 
         for i, bbox in enumerate(bboxes):
-            
+
             search = np.where(self.mask == best_anchor_idxs[i])
             best_detect = search[0][0]
             best_anchor = search[1][0]
@@ -125,9 +130,12 @@ class Dataset(Sequence):
             coord_xy /= self.strides[best_detect]
             coord_xy = coord_xy.astype(np.int)
 
-            bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, :4] = bbox
-            bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, 4:5] = 1.
-            bboxes_label[best_detect][coord_xy[1], coord_xy[0], best_anchor, 5:] = labels[i, :]
+            bboxes_label[best_detect][coord_xy[1],
+                                      coord_xy[0], best_anchor, :4] = bbox
+            bboxes_label[best_detect][coord_xy[1],
+                                      coord_xy[0], best_anchor, 4:5] = 1.
+            bboxes_label[best_detect][coord_xy[1],
+                                      coord_xy[0], best_anchor, 5:] = labels[i, :]
 
         return [layer.reshape([layer.shape[0], layer.shape[1], -1]) for layer in bboxes_label]
 
