@@ -1,0 +1,35 @@
+yolo:
+  type: "yolox"
+  iou_threshold: 0.5
+  score_threshold: 0.45
+  max_boxes: 100
+  strides: "32,16"
+  anchors: "3,5 4,5 5,6 6,8 9,12 18,23"
+  mask: "3,4,5 0,1,2"
+  name_path: "./data/react-airbus.names"
+
+train:
+  label: "react-airbus"
+  anno_path: "./data/react-airbus.txt"
+  image_size: "224,256,288,320,352,384,416"
+
+  train_times: 20
+
+  batch_size: 4
+  init_weight_path: "./ckpts/yolov4-tiny.h5"
+  #init_weight_path: "./ckpts/tmp/react-airbus/202110261504/mAP-0.4449.h5"
+  save_weight_path: "./ckpts"
+
+  loss_type: "CIoU+FL"
+
+  mosaic: true
+  label_smoothing: false
+  normal_method: true
+
+  ignore_threshold: 0.5
+
+test:
+  anno_path: "./data/react-airbus.txt"
+  image_size: "416"
+  batch_size: 1
+  init_weight_path: ""
