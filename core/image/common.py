@@ -3,12 +3,43 @@ import numpy as np
 import cv2
 
 
+class BoundingBox:
+    def __init__(self, xmin, ymin, xmax, ymax, score, cls):
+        self.xmin = xmin
+        self.ymin = ymin
+        self.xmax = xmax
+        self.ymax = ymax
+
+        self.score = score
+        self.cls = int(cls)
+
+
 def read_image(*args, **kwargs):
     return cv2.cvtColor(cv2.imread(*args, **kwargs), cv2.COLOR_BGR2RGB)
 
 
 def read_video(*args, **kwargs):
     return cv2.VideoCapture(*args, **kwargs)
+
+
+def postprocess_bboxes(input_size, output_size, bboxes, scores, classes):
+    input_w, input_h = input_size
+    output_w, output_h = output_size
+
+    scale = min(input_w / output_w, input_h / output_h)
+    nw, nh = int(scale * output_w), int(scale * output_h)
+    dw, dh = (input_w - nw) // 2, (input_h - nh) // 2
+
+    bboxes = bboxes.astype(np.float32)
+    bboxes[:, [0, 2]] = np.clip((bboxes[:, [0, 2]] - dw) / scale, 0., output_w)
+    bboxes[:, [1, 3]] = np.clip((bboxes[:, [1, 3]] - dh) / scale, 0., output_h)
+
+    boxes = []
+    for i in range(len(bboxes)):
+        x1, y1, x2, y2 = bboxes[i][:4]
+        boxes.append(BoundingBox(x1, y1, x2, y2, scores[i], classes[i]))
+
+    return boxes
 
 
 def postprocess_image(image, size, bboxes=None):

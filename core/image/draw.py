@@ -33,7 +33,8 @@ class Shader:
             elif i == 5:
                 return c + m, m, x + m
 
-        self._colors = {i: h2rgb(i / num_colors * 6) for i in range(num_colors)}
+        self._colors = {i: h2rgb(i / num_colors * 6)
+                        for i in range(num_colors)}
 
     def get_color(self, index):
         """
@@ -62,7 +63,8 @@ def _draw_bboxes_relative(img, bboxes, scores, classes, names, shader):
 
     def _draw_bbox(img, bbox, score, cls):
         msg = '{} {:.2%}'.format(names[int(cls)], score)
-        (x, y), base = cv2.getTextSize(msg, cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1)
+        (x, y), base = cv2.getTextSize(
+            msg, cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1)
         color = shader.get_color(int(cls))
 
         h, w = img.shape[:2]
@@ -95,7 +97,8 @@ def _draw_bboxes_absolute(img, bboxes, scores, classes, names, shader):
 
     def _draw_bbox(img, bbox, score, cls):
         msg = '{} {:.2%}'.format(names[int(cls)], score)
-        (x, y), base = cv2.getTextSize(msg, cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1)
+        (x, y), base = cv2.getTextSize(
+            msg, cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1)
         color = shader.get_color(int(cls))
 
         x1, y1, x2, y2 = bbox[:4]
@@ -113,5 +116,38 @@ def _draw_bboxes_absolute(img, bboxes, scores, classes, names, shader):
 
     for bbox, score, cls in zip(bboxes, scores, classes):
         img = _draw_bbox(img, bbox, score, cls)
+
+    return img
+
+
+def draw_bboxes(img, boxes, names, shader):
+    """
+    BBoxes is absolute Format
+    :param img: BGR, uint8
+    :param bboxes: x1, y1, x2, y2, int
+    :return: img, BGR, uint8
+    """
+
+    def _draw_bbox(img, bbox):
+        msg = '{} {:.2%}'.format(names[bbox.cls], bbox.score)
+        (x, y), base = cv2.getTextSize(
+            msg, cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1)
+        color = shader.get_color(bbox.cls)
+
+        x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
+        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+        img = cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+        img = cv2.rectangle(img, (x1, y1 - y - base),
+                            (x1 + x, y1),
+                            color, -1)
+        img = cv2.putText(img,
+                          msg,
+                          (x1, y1),
+                          cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, (255, 255, 255), 1)
+
+        return img
+
+    for bbox in boxes:
+        img = _draw_bbox(img, bbox)
 
     return img

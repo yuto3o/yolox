@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import glob
 import os
+from absl import app, flags
 
 from tensorflow.keras.models import load_model
 from core.image import draw_bboxes, preprocess_image, postprocess_bboxes, Shader, read_image
@@ -31,24 +32,37 @@ class Inference:
 
         return postprocess_bboxes((output_w, output_h), (input_w, input_h), bboxes, scores, classes)
 
-model = Inference("./models/mAP-0.4702")
 
-shader = Shader(1)
-names = ["hole"]
-image_size = 416
+flags.DEFINE_string(
+    'model', 'models/full_yolo4', 'Path to the keras full model (not only the weights)')
+flags.DEFINE_integer('image_size', '416', 'CNN input image size')
+flags.DEFINE_string('image_folder', '/data/Images/',
+                    'Path to the image folder')
+flags.DEFINE_multi_string('names', ['class1', 'class2'], 'class names')
+FLAGS = flags.FLAGS
 
-for img in glob.glob("/root/deep-learning-ws/data/Images/*"):
 
-    image = read_image(img)
+def main(_argv):
+    model = Inference(FLAGS.model)
 
-    bboxes = model.predict(image, image_size)
+    shader = Shader(1)
 
-    for bbox in bboxes:
-        if bbox.score > 0.45:
-            image = draw_bboxes(image, [bbox], names, shader)
+    for img in glob.glob(FLAGS.image_folder+"*"):
 
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imshow('Image', image)
+        image = read_image(img)
 
-    if cv2.waitKey(0) == ord('q'):
-        exit(0)
+        bboxes = model.predict(image, FLAGS.image_size)
+
+        for bbox in bboxes:
+            if bbox.score > 0.45:
+                image = draw_bboxes(image, [bbox], FLAGS.names, shader)
+
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        cv2.imshow('Image', image)
+
+        if cv2.waitKey(0) == ord('q'):
+            exit(0)
+
+
+if __name__ == "__main__":
+    app.run(main)
