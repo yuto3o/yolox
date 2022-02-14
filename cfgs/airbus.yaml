@@ -29,7 +29,7 @@ train:
   ignore_threshold: 0.5
 
 test:
-  anno_path: "./data/react-airbus.txt"
+  anno_path: "/root/deep-learning-ws/data/react-airbus.txt"
   image_size: "416"
   batch_size: 1
-  init_weight_path: ""
+  init_weight_path: "/root/deep-learning-ws/keras_models/mAP-0.4554.h5"
